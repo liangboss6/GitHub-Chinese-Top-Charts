@@ -1041,13 +1041,17 @@ body {
   <p class="footer-text">用 ❤️ 记录小星星的每一个成长瞬间</p>
   <p class="footer-sub">永远爱你，我的宝贝 ✨</p>
   <div class="admin-tools">
-    <button class="btn-admin" id="publishBtn" title="生成更新后的共享数据文件，替换 memories-data.js 并 push 到 GitHub" style="background:rgba(255,165,133,0.15);border-color:var(--coral);color:var(--coral);font-weight:700;">📡 发布到网站</button>
+    <button class="btn-admin" id="publishBtn" title="一键自动提交到 GitHub，所有人立即看到最新内容" style="background:rgba(255,165,133,0.15);border-color:var(--coral);color:var(--coral);font-weight:700;">📡 一键发布</button>
     <button class="btn-admin" id="exportBtn" title="导出所有记忆为备份文件">📥 备份</button>
     <button class="btn-admin" id="importBtn" title="从备份文件恢复记忆">📤 恢复</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
-    <button class="btn-admin" id="resetBtn" title="清除本地修改，恢复共享默认">🔄 重置</button>
+    <button class="btn-admin" id="resetBtn" title="清除所有本地修改">🔄 重置</button>
   </div>
-  <p style="font-size:0.7rem;color:var(--text-lighter);margin-top:8px;" id="dataHint">💡 <span id="localCount">0</span> 条本地记忆等待发布</p>
+  <div style="margin-top:12px;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;">
+    <input type="password" id="tokenInput" placeholder="🔐 输入 GitHub Token（只需设置一次）" style="padding:8px 14px;border:2px solid rgba(180,140,120,0.2);border-radius:999px;font-size:0.75rem;width:260px;max-width:70vw;font-family:monospace;background:rgba(255,255,255,0.6);">
+    <button class="btn-admin" id="saveTokenBtn" title="保存 Token 到浏览器">💾 保存</button>
+  </div>
+  <p style="font-size:0.7rem;margin-top:8px;" id="localBadge">💡 加载中...</p>
 </footer>
 
 <!-- ➕ Add Memory Button -->
@@ -1101,217 +1105,162 @@ body {
 
 <script>
 /* ============================================
-   🌟 DATA STORE — 双数据源：共享 + 本地
-   ============================================
-   共享记忆 (SHARED_MEMORIES)：来自 memories-data.js，所有人可见
-   本地记忆 (localStorage)：你自己添加的，只有你的浏览器可见
-   发布后本地记忆会合并到共享记忆中，变成所有人可见
-*/
-const STORAGE_KEY = 'myLittleStar_local_v3';
-
-// 加载共享记忆（来自 memories-data.js）+ 本地记忆（来自 localStorage）
-function loadMemories() {
-  const shared = (typeof SHARED_MEMORIES !== 'undefined' && Array.isArray(SHARED_MEMORIES))
-    ? SHARED_MEMORIES
-    : [];
-
-  let local = [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) local = parsed;
-    }
-  } catch(e) {}
-
-  // 合并：本地数据优先（相同ID用本地的），新ID直接加入
-  const merged = [...shared];
-  local.forEach(localMem => {
-    const idx = merged.findIndex(m => m.id === localMem.id);
-    if (idx >= 0) {
-      merged[idx] = localMem; // 本地版本覆盖共享版本
-    } else {
-      merged.unshift(localMem); // 新记忆插入最前面
-    }
-  });
-
-  return merged;
-}
-
-// 保存到本地（只保存用户添加/修改的记忆，不重复保存共享的）
-function saveLocal(localMemories) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(localMemories));
-}
-
-// 获取纯本地记忆（用户自己添加或修改的）
-function getLocalOnly() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch(e) { return []; }
-}
-
-// 判断某条记忆是共享的还是本地的
-function isLocalMemory(id) {
-  return getLocalOnly().some(m => m.id === id);
-}
-
-// 获取共享记忆的 ID 列表
-function getSharedIds() {
-  if (typeof SHARED_MEMORIES === 'undefined' || !Array.isArray(SHARED_MEMORIES)) return [];
-  return SHARED_MEMORIES.map(m => m.id);
-}
-
-let memories = loadMemories();
-
-function saveMemoriesToLocal() {
-  // 只保存用户自己添加的（不在共享记忆中的，或者修改过的共享记忆）
-  const sharedIds = getSharedIds();
-  const localOnly = memories.filter(m => {
-    // 如果 ID 以 'u' 开头，是用户创建的 → 保存
-    if (m.id.startsWith('u')) return true;
-    // 如果 ID 在共享中，但内容被修改了 → 保存修改版
-    if (sharedIds.includes(m.id)) {
-      const shared = SHARED_MEMORIES.find(s => s.id === m.id);
-      if (shared && JSON.stringify(shared) !== JSON.stringify(m)) return true;
-      return false;
-    }
-    // 其他情况
-    return false;
-  });
-  saveLocal(localOnly);
-}
-
-/* ============================================
-   🎨 RENDER FUNCTIONS
+   🌟 DATA STORE — 删除不会复活 + 一键发布
    ============================================ */
+var STORAGE_KEY = 'myls_local';
+var DELETED_KEY = 'myls_deleted';
+var TOKEN_KEY = 'myls_gh_token';
+
+function getDeletedIds() {
+  try { return JSON.parse(localStorage.getItem(DELETED_KEY)) || []; }
+  catch(e) { return []; }
+}
+function saveDeletedIds(ids) { localStorage.setItem(DELETED_KEY, JSON.stringify(ids)); }
+function markDeleted(id) {
+  var ids = getDeletedIds();
+  if (ids.indexOf(id) === -1) { ids.push(id); saveDeletedIds(ids); }
+}
+
+function loadMemories() {
+  var shared = (typeof SHARED_MEMORIES !== 'undefined' && Array.isArray(SHARED_MEMORIES)) ? SHARED_MEMORIES : [];
+  var deletedIds = getDeletedIds();
+  var local = [];
+  try { var raw = localStorage.getItem(STORAGE_KEY); if (raw) local = JSON.parse(raw); } catch(e) {}
+  var active = shared.filter(function(m) { return deletedIds.indexOf(m.id) === -1; });
+  local.forEach(function(localMem) {
+    var idx = -1;
+    for (var i = 0; i < active.length; i++) { if (active[i].id === localMem.id) { idx = i; break; } }
+    if (idx >= 0) { active[idx] = localMem; }
+    else { active.unshift(localMem); }
+  });
+  return active;
+}
+
+function getLocalOnly() {
+  try { var raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; }
+  catch(e) { return []; }
+}
+function saveLocal(arr) { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+var memories = loadMemories();
+
 function getPlaceholderBg(mem) {
-  const palettes = [
-    'linear-gradient(135deg, #FFE8D6, #C9E4F2)',
-    'linear-gradient(135deg, #E4D7F5, #FFB8C9)',
-    'linear-gradient(135deg, #C8F0DE, #FFD54F)',
-    'linear-gradient(135deg, #C9E4F2, #E4D7F5)',
-    'linear-gradient(135deg, #FFB8C9, #FFE8D6)',
-    'linear-gradient(135deg, #FFD54F, #C8F0DE)',
-  ];
-  const hash = mem.id.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  var palettes = ['linear-gradient(135deg, #FFE8D6, #C9E4F2)','linear-gradient(135deg, #E4D7F5, #FFB8C9)','linear-gradient(135deg, #C8F0DE, #FFD54F)','linear-gradient(135deg, #C9E4F2, #E4D7F5)','linear-gradient(135deg, #FFB8C9, #FFE8D6)','linear-gradient(135deg, #FFD54F, #C8F0DE)'];
+  var hash = 0; for (var i = 0; i < mem.id.length; i++) { hash += mem.id.charCodeAt(i); }
   return palettes[hash % palettes.length];
 }
-
 function getPlaceholderEmoji(mem) {
-  const emojis = ['🌟','🎈','🧸','🦁','🐣','🌈','🎨','🚀','🌻','🍭','🦄','🎪','🐼','🎵','🌸','🍀'];
-  const hash = mem.id.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  var emojis = ['🌟','🎈','🧸','🦁','🐣','🌈','🎨','🚀','🌻','🍭','🦄','🎪','🐼','🎵','🌸','🍀'];
+  var hash = 0; for (var i = 0; i < mem.id.length; i++) { hash += mem.id.charCodeAt(i); }
   return emojis[hash % emojis.length];
 }
 
 function renderPhotos() {
-  const wall = document.getElementById('photoWall');
-  const photos = memories.filter(m => m.type === 'photo');
+  var wall = document.getElementById('photoWall');
+  var photos = memories.filter(function(m) { return m.type === 'photo'; });
   if (!photos.length) {
-    wall.innerHTML = `<div class="empty-state"><span class="empty-state-emoji">📸</span><p class="empty-state-text">还没有照片呢</p><p>点击右下角的 ✏️ 按钮添加第一张照片吧～</p></div>`;
+    wall.innerHTML = '<div class="empty-state"><span class="empty-state-emoji">📸</span><p class="empty-state-text">还没有照片呢</p><p>点击右下角的 ✏️ 按钮添加第一张照片吧～</p></div>';
     return;
   }
-  wall.innerHTML = photos.map((p,i) => `
-    <div class="photo-card reveal reveal-delay-${(i%4)+1}" data-id="${p.id}">
-      <button class="btn-danger delete-memory-btn" data-id="${p.id}" title="删除">🗑️</button>
-      <div class="photo-card-img" onclick="openLightbox('${p.id}')">
-        <span class="photo-card-tape" aria-hidden="true"></span>
-        ${p.fileData
-          ? `<img src="${p.fileData}" alt="${p.title}" loading="lazy">`
-          : `<span style="background:${getPlaceholderBg(p)};width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">${getPlaceholderEmoji(p)}</span>`
-        }
-      </div>
-      <p class="photo-card-caption">${p.title}</p>
-      <p class="photo-card-date">${p.date}</p>
-    </div>
-  `).join('');
+  wall.innerHTML = photos.map(function(p, i) {
+    return '<div class="photo-card reveal reveal-delay-' + ((i%4)+1) + '" data-id="' + p.id + '">' +
+      '<button class="btn-danger delete-memory-btn" data-id="' + p.id + '" title="删除">🗑️</button>' +
+      '<div class="photo-card-img" onclick="openLightbox(\'' + p.id + '\')">' +
+      '<span class="photo-card-tape" aria-hidden="true"></span>' +
+      (p.fileData
+        ? '<img src="' + p.fileData + '" alt="' + p.title + '" loading="lazy">'
+        : '<span style="background:' + getPlaceholderBg(p) + ';width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">' + getPlaceholderEmoji(p) + '</span>'
+      ) +
+      '</div>' +
+      '<p class="photo-card-caption">' + p.title + '</p>' +
+      '<p class="photo-card-date">' + p.date + '</p>' +
+      '</div>';
+  }).join('');
 }
 
 function renderVideos() {
-  const grid = document.getElementById('videoGrid');
-  const videos = memories.filter(m => m.type === 'video');
+  var grid = document.getElementById('videoGrid');
+  var videos = memories.filter(function(m) { return m.type === 'video'; });
   if (!videos.length) {
-    grid.innerHTML = `<div class="empty-state"><span class="empty-state-emoji">🎬</span><p class="empty-state-text">还没有视频呢</p><p>点击右下角的 ✏️ 按钮添加第一个视频吧～</p></div>`;
+    grid.innerHTML = '<div class="empty-state"><span class="empty-state-emoji">🎬</span><p class="empty-state-text">还没有视频呢</p><p>点击右下角的 ✏️ 按钮添加第一个视频吧～</p></div>';
     return;
   }
-  grid.innerHTML = videos.map((v,i) => `
-    <div class="video-card reveal reveal-delay-${(i%4)+1}" data-id="${v.id}">
-      <button class="btn-danger delete-memory-btn" data-id="${v.id}" title="删除">🗑️</button>
-      <div class="video-thumb" onclick="playVideo('${v.id}')">
-        ${v.fileData
-          ? `<video src="${v.fileData}" muted preload="metadata"></video>`
-          : `<span style="background:${getPlaceholderBg(v)};width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">${getPlaceholderEmoji(v)}</span>`
-        }
-        <div class="video-play-btn">▶</div>
-      </div>
-      <div class="video-info">
-        <p class="video-title">${v.title}</p>
-        <p class="video-date">${v.date} ${v.desc ? '— '+v.desc.slice(0,30)+'...' : ''}</p>
-      </div>
-    </div>
-  `).join('');
+  grid.innerHTML = videos.map(function(v, i) {
+    return '<div class="video-card reveal reveal-delay-' + ((i%4)+1) + '" data-id="' + v.id + '">' +
+      '<button class="btn-danger delete-memory-btn" data-id="' + v.id + '" title="删除">🗑️</button>' +
+      '<div class="video-thumb" onclick="playVideo(\'' + v.id + '\')">' +
+      (v.fileData
+        ? '<video src="' + v.fileData + '" muted preload="metadata"></video>'
+        : '<span style="background:' + getPlaceholderBg(v) + ';width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">' + getPlaceholderEmoji(v) + '</span>'
+      ) +
+      '<div class="video-play-btn">▶</div>' +
+      '</div>' +
+      '<div class="video-info"><p class="video-title">' + v.title + '</p><p class="video-date">' + v.date + (v.desc ? ' — ' + v.desc.slice(0,30) + '...' : '') + '</p></div>' +
+      '</div>';
+  }).join('');
 }
 
 function renderStories() {
-  const container = document.getElementById('storiesContainer');
-  const stories = memories.filter(m => m.type === 'story');
+  var container = document.getElementById('storiesContainer');
+  var stories = memories.filter(function(m) { return m.type === 'story'; });
   if (!stories.length) {
-    container.innerHTML = `<div class="empty-state"><span class="empty-state-emoji">📝</span><p class="empty-state-text">还没有故事呢</p><p>点击右下角的 ✏️ 按钮写下第一个故事吧～</p></div>`;
+    container.innerHTML = '<div class="empty-state"><span class="empty-state-emoji">📝</span><p class="empty-state-text">还没有故事呢</p><p>点击右下角的 ✏️ 按钮写下第一个故事吧～</p></div>';
     return;
   }
-  container.innerHTML = stories.map((s,i) => `
-    <div class="story-card reveal reveal-delay-${(i%4)+1}" data-id="${s.id}">
-      <button class="btn-danger delete-memory-btn" data-id="${s.id}" title="删除">🗑️</button>
-      <span class="story-deco">${getPlaceholderEmoji(s)}</span>
-      <span class="story-deco">💫</span>
-      <div class="story-date">📅 ${s.date}</div>
-      <h3 class="story-title">${s.title}</h3>
-      <p class="story-body">${s.desc}</p>
-    </div>
-  `).join('');
+  container.innerHTML = stories.map(function(s, i) {
+    return '<div class="story-card reveal reveal-delay-' + ((i%4)+1) + '" data-id="' + s.id + '">' +
+      '<button class="btn-danger delete-memory-btn" data-id="' + s.id + '" title="删除">🗑️</button>' +
+      '<span class="story-deco">' + getPlaceholderEmoji(s) + '</span><span class="story-deco">💫</span>' +
+      '<div class="story-date">📅 ' + s.date + '</div>' +
+      '<h3 class="story-title">' + s.title + '</h3>' +
+      '<p class="story-body">' + s.desc + '</p>' +
+      '</div>';
+  }).join('');
 }
 
 function renderTimeline() {
-  const container = document.getElementById('timelineContainer');
-  const milestones = memories.filter(m => m.type === 'milestone').sort((a,b) => new Date(a.date) - new Date(b.date));
+  var container = document.getElementById('timelineContainer');
+  var milestones = memories.filter(function(m) { return m.type === 'milestone'; }).sort(function(a,b) { return new Date(a.date) - new Date(b.date); });
   if (!milestones.length) {
-    container.innerHTML = `<div class="empty-state"><span class="empty-state-emoji">⏳</span><p class="empty-state-text">还没有里程碑呢</p><p>点击右下角的 ✏️ 按钮添加第一个里程碑吧～</p></div>`;
+    container.innerHTML = '<div class="empty-state"><span class="empty-state-emoji">⏳</span><p class="empty-state-text">还没有里程碑呢</p><p>点击右下角的 ✏️ 按钮添加第一个里程碑吧～</p></div>';
     return;
   }
-  container.innerHTML = milestones.map((m,i) => `
-    <div class="timeline-item reveal reveal-delay-${(i%4)+1}" data-id="${m.id}">
-      <button class="btn-danger delete-memory-btn" data-id="${m.id}" title="删除">🗑️</button>
-      <span class="timeline-emoji">${getPlaceholderEmoji(m)}</span>
-      <div class="timeline-date">${m.date}</div>
-      <h3 class="timeline-title">${m.title}</h3>
-      <p class="timeline-desc">${m.desc}</p>
-    </div>
-  `).join('');
+  container.innerHTML = milestones.map(function(m, i) {
+    return '<div class="timeline-item reveal reveal-delay-' + ((i%4)+1) + '" data-id="' + m.id + '">' +
+      '<button class="btn-danger delete-memory-btn" data-id="' + m.id + '" title="删除">🗑️</button>' +
+      '<span class="timeline-emoji">' + getPlaceholderEmoji(m) + '</span>' +
+      '<div class="timeline-date">' + m.date + '</div>' +
+      '<h3 class="timeline-title">' + m.title + '</h3>' +
+      '<p class="timeline-desc">' + m.desc + '</p>' +
+      '</div>';
+  }).join('');
 }
 
 function renderAll() {
-  renderPhotos();
-  renderVideos();
-  renderStories();
-  renderTimeline();
+  renderPhotos(); renderVideos(); renderStories(); renderTimeline();
   attachDeleteHandlers();
-  setTimeout(() => observeRevealElements(), 100);
+  updateLocalBadge();
+  setTimeout(function() { observeRevealElements(); }, 100);
 }
 
 /* ============================================
-   🗑️ DELETE
+   🗑️ DELETE — 彻底修复
    ============================================ */
 function attachDeleteHandlers() {
-  document.querySelectorAll('.delete-memory-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
+  document.querySelectorAll('.delete-memory-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
       e.stopPropagation();
-      if (confirm('确定要删除这条记忆吗？这个操作不能撤销哦～ 🥺')) {
-        memories = memories.filter(m => m.id !== btn.dataset.id);
-        saveMemoriesToLocal();
-        renderAll();
-        updateLocalCount();
-        spawnSparkles(btn);
+      if (!confirm('确定要删除这条记忆吗？')) return;
+      var id = btn.dataset.id;
+      var sharedIds = (typeof SHARED_MEMORIES !== 'undefined' && Array.isArray(SHARED_MEMORIES)) ? SHARED_MEMORIES.map(function(m){return m.id;}) : [];
+      if (sharedIds.indexOf(id) !== -1) {
+        markDeleted(id);
       }
+      memories = memories.filter(function(m) { return m.id !== id; });
+      var local = getLocalOnly().filter(function(m) { return m.id !== id; });
+      saveLocal(local);
+      renderAll();
+      spawnSparkles(btn);
     });
   });
 }
@@ -1320,67 +1269,58 @@ function attachDeleteHandlers() {
    🖼️ LIGHTBOX & VIDEO
    ============================================ */
 function openLightbox(id) {
-  const mem = memories.find(m => m.id === id);
+  var mem = memories.find(function(m) { return m.id === id; });
   if (!mem || !mem.fileData) return;
-  const img = document.getElementById('lightboxImg');
-  img.src = mem.fileData;
-  img.alt = mem.title;
+  document.getElementById('lightboxImg').src = mem.fileData;
+  document.getElementById('lightboxImg').alt = mem.title;
   document.getElementById('lightbox').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
-
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('active');
   document.body.style.overflow = '';
 }
-
 document.getElementById('lightbox').addEventListener('click', function(e) {
   if (e.target === this || e.target.classList.contains('lightbox-close')) closeLightbox();
 });
 document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
-document.addEventListener('keydown', e => { if (e.key==='Escape') closeLightbox(); });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
 
 function playVideo(id) {
-  const mem = memories.find(m => m.id === id);
+  var mem = memories.find(function(m) { return m.id === id; });
   if (!mem) return;
-  const card = document.querySelector(`.video-card[data-id="${id}"]`);
+  var card = document.querySelector('.video-card[data-id="' + id + '"]');
   if (!card) return;
-  const thumb = card.querySelector('.video-thumb');
-  const existingVideo = thumb.querySelector('video');
-  if (existingVideo && existingVideo.src && !existingVideo.src.endsWith('/')) {
-    if (existingVideo.paused) { existingVideo.play(); thumb.querySelector('.video-play-btn').style.opacity='0'; }
-    else { existingVideo.pause(); thumb.querySelector('.video-play-btn').style.opacity='1'; }
-    return;
-  }
+  var thumb = card.querySelector('.video-thumb');
   if (mem.fileData) {
-    thumb.innerHTML = `<video src="${mem.fileData}" controls autoplay style="width:100%;height:100%;object-fit:cover;"></video>`;
+    thumb.innerHTML = '<video src="' + mem.fileData + '" controls autoplay style="width:100%;height:100%;object-fit:cover;"></video>';
   } else {
     spawnSparkles(thumb.querySelector('.video-play-btn'));
   }
 }
 
 /* ============================================
-   ✨ SPARKLE EFFECT
+   ✨ SPARKLE
    ============================================ */
 function spawnSparkles(element) {
-  const rect = element.getBoundingClientRect();
-  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
-  const emojis = ['✨','⭐','💫','🌟','💖','🎀','🦋','🌸'];
-  for (let i=0; i<12; i++) {
-    const s = document.createElement('span');
+  var rect = element.getBoundingClientRect();
+  var cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  var emojis = ['✨','⭐','💫','🌟','💖','🎀','🦋','🌸'];
+  for (var i = 0; i < 12; i++) {
+    var s = document.createElement('span');
     s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-    s.style.cssText = `position:fixed;left:${cx}px;top:${cy}px;font-size:${1+Math.random()*1.5}rem;pointer-events:none;z-index:9999;--sx:${(Math.random()-0.5)*200}px;--sy:${(Math.random()-0.5)*200}px;animation:sparklePoof 0.8s ease-out forwards;animation-delay:${Math.random()*0.2}s;`;
+    s.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;font-size:' + (1+Math.random()*1.5) + 'rem;pointer-events:none;z-index:9999;--sx:' + ((Math.random()-0.5)*200) + 'px;--sy:' + ((Math.random()-0.5)*200) + 'px;animation:sparklePoof 0.8s ease-out forwards;animation-delay:' + (Math.random()*0.2) + 's;';
     document.body.appendChild(s);
-    setTimeout(()=>s.remove(),1000);
+    setTimeout(function() { s.remove(); }, 1000);
   }
 }
 
 /* ============================================
    📋 MODAL
    ============================================ */
-const modalOverlay = document.getElementById('modalOverlay');
-const memoryForm = document.getElementById('memoryForm');
-const memType = document.getElementById('memType');
+var modalOverlay = document.getElementById('modalOverlay');
+var memoryForm = document.getElementById('memoryForm');
+var memType = document.getElementById('memType');
 
 function openModal() {
   modalOverlay.classList.add('active');
@@ -1390,50 +1330,44 @@ function openModal() {
   memoryForm._fileData = null;
   updateFormForType();
 }
-
 function closeModalFn() {
   modalOverlay.classList.remove('active');
   document.body.style.overflow = '';
 }
-
 document.getElementById('addMemoryBtn').addEventListener('click', openModal);
 document.getElementById('modalClose').addEventListener('click', closeModalFn);
-modalOverlay.addEventListener('click', e => { if (e.target===modalOverlay) closeModalFn(); });
-document.addEventListener('keydown', e => { if (e.key==='Escape'&&modalOverlay.classList.contains('active')) closeModalFn(); });
-
+modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeModalFn(); });
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModalFn(); });
 memType.addEventListener('change', updateFormForType);
 
 function updateFormForType() {
-  const type = memType.value;
-  const fileGroup = document.getElementById('fileGroup');
-  const descGroup = document.getElementById('descGroup');
-  const descEl = document.getElementById('memDesc');
-  if (type==='photo'||type==='video') {
-    fileGroup.style.display='block';
-    descGroup.style.display='block';
+  var type = memType.value;
+  var fg = document.getElementById('fileGroup');
+  var dg = document.getElementById('descGroup');
+  var descEl = document.getElementById('memDesc');
+  if (type === 'photo' || type === 'video') {
+    fg.style.display = 'block'; dg.style.display = 'block';
     descEl.required = false;
-    document.getElementById('fileLabelText').textContent = type==='photo'?'📁 点击选择照片文件':'📁 点击选择视频文件';
-    document.getElementById('memFile').accept = type==='photo'?'image/*':'video/*';
-  } else if (type==='story') {
-    fileGroup.style.display='none';
-    descGroup.style.display='block';
+    document.getElementById('fileLabelText').textContent = type === 'photo' ? '📁 点击选择照片文件' : '📁 点击选择视频文件';
+    document.getElementById('memFile').accept = type === 'photo' ? 'image/*' : 'video/*';
+  } else if (type === 'story') {
+    fg.style.display = 'none'; dg.style.display = 'block';
     descEl.required = true;
   } else {
-    fileGroup.style.display='none';
-    descGroup.style.display='block';
+    fg.style.display = 'none'; dg.style.display = 'block';
     descEl.required = false;
   }
 }
 
 document.getElementById('memFile').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  const preview = document.getElementById('filePreview');
+  var file = e.target.files[0];
+  var preview = document.getElementById('filePreview');
   preview.innerHTML = '';
   if (!file) return;
-  const reader = new FileReader();
+  var reader = new FileReader();
   reader.onload = function(ev) {
-    if (file.type.startsWith('image/')) preview.innerHTML = `<img src="${ev.target.result}" alt="预览">`;
-    else if (file.type.startsWith('video/')) preview.innerHTML = `<video src="${ev.target.result}" muted></video>`;
+    if (file.type.startsWith('image/')) preview.innerHTML = '<img src="' + ev.target.result + '" alt="预览">';
+    else if (file.type.startsWith('video/')) preview.innerHTML = '<video src="' + ev.target.result + '" muted></video>';
     memoryForm._fileData = ev.target.result;
   };
   reader.readAsDataURL(file);
@@ -1441,240 +1375,288 @@ document.getElementById('memFile').addEventListener('change', function(e) {
 
 memoryForm.addEventListener('submit', function(e) {
   e.preventDefault();
-  const type = memType.value;
-  const title = document.getElementById('memTitle').value.trim();
-  const date = document.getElementById('memDate').value;
-  const desc = document.getElementById('memDesc').value.trim();
-  const fileData = memoryForm._fileData || null;
-  if (!title||!date) return;
+  var type = memType.value;
+  var title = document.getElementById('memTitle').value.trim();
+  var date = document.getElementById('memDate').value;
+  var desc = document.getElementById('memDesc').value.trim();
+  var fileData = memoryForm._fileData || null;
+  if (!title || !date) return;
 
-  const newMemory = {
-    id: 'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
-    type, title, date, desc, fileData,
+  var newMemory = {
+    id: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    type: type, title: title, date: date, desc: desc, fileData: fileData
   };
   memories.unshift(newMemory);
-  saveMemoriesToLocal();
+  var local = getLocalOnly();
+  local.unshift(newMemory);
+  saveLocal(local);
   renderAll();
-  updateLocalCount();
   closeModalFn();
   spawnSparkles(document.getElementById('addMemoryBtn'));
 
-  const sectionMap = { photo:'photos', video:'videos', story:'stories', milestone:'timeline' };
-  const targetId = sectionMap[type];
-  if (targetId) setTimeout(()=>document.getElementById(targetId).scrollIntoView({behavior:'smooth',block:'start'}),400);
+  var sectionMap = { photo:'photos', video:'videos', story:'stories', milestone:'timeline' };
+  var targetId = sectionMap[type];
+  if (targetId) setTimeout(function() { document.getElementById(targetId).scrollIntoView({behavior:'smooth',block:'start'}); }, 400);
 });
 
 /* ============================================
-   📡 发布 / 导出 / 导入 / 重置
+   🔐 TOKEN 管理
    ============================================ */
+function getToken() { return localStorage.getItem(TOKEN_KEY) || ''; }
+function saveToken(t) { localStorage.setItem(TOKEN_KEY, t); }
 
-// 📡 核心功能：发布到网站
-document.getElementById('publishBtn').addEventListener('click', () => {
-  const allMemories = loadMemories();
-  const totalSize = new Blob([JSON.stringify(allMemories)]).size;
-  const sizeMB = (totalSize / 1024 / 1024).toFixed(2);
-
-  let warning = '';
-  if (parseFloat(sizeMB) > 5) {
-    warning = '\n\n⚠️ 数据文件约 ' + sizeMB + ' MB，包含照片/视频时会比较大。';
-  }
-
-  if (!confirm('📡 发布 ' + allMemories.length + ' 条记忆到网站！\n\n📦 文件大小：约 ' + sizeMB + ' MB' + warning + '\n\n发布后会下载一个新文件，你需要：\n1. 替换 docs/memories-data.js\n2. 提交并推送到 GitHub\n\n确定生成发布文件吗？')) {
-    return;
-  }
-
-  const jsContent = '/**\n * 🌟 共享记忆数据 — 更新于 ' + new Date().toLocaleString('zh-CN') + '\n * 共 ' + allMemories.length + ' 条记忆\n */\nconst SHARED_MEMORIES = ' + JSON.stringify(allMemories, null, 2) + ';\n';
-
-  const blob = new Blob([jsContent], {type:'application/javascript'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'memories-data.js';
-  a.click();
-  URL.revokeObjectURL(url);
-
-  spawnSparkles(document.getElementById('publishBtn'));
-
-  setTimeout(() => {
-    alert('✅ 发布文件已生成！\n\n📋 接下来：\n\n1️⃣ 打开 GitHub 仓库的 docs/ 目录\n2️⃣ 上传刚下载的 memories-data.js 替换旧文件\n3️⃣ 提交并推送\n\n🌐 推送后约30秒，所有人都能看到新内容！');
-  }, 500);
+document.getElementById('saveTokenBtn').addEventListener('click', function() {
+  var t = document.getElementById('tokenInput').value.trim();
+  if (!t) { alert('请先粘贴 GitHub Token！'); return; }
+  saveToken(t);
+  spawnSparkles(document.getElementById('saveTokenBtn'));
+  alert('✅ Token 已保存！\n\n现在可以点击「📡 一键发布」了。\nToken 只存在你的浏览器中，绝对安全。');
 });
 
-// 📥 完整备份
-document.getElementById('exportBtn').addEventListener('click', () => {
-  const allMemories = loadMemories();
-  const blob = new Blob([JSON.stringify(allMemories, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+var savedToken = getToken();
+if (savedToken) document.getElementById('tokenInput').value = savedToken;
+
+/* ============================================
+   📡 一键发布 — 自动提交到 GitHub
+   ============================================ */
+document.getElementById('publishBtn').addEventListener('click', function() {
+  var token = getToken();
+  if (!token) {
+    alert('🔐 首次使用需要设置 GitHub Token：\n\n1. 打开 https://github.com/settings/tokens\n2. 点击「Generate new token (classic)」\n3. 勾选 repo 权限\n4. 生成后复制粘贴到下方输入框\n5. 点击「💾 保存」\n\nToken 只保存在你的浏览器中。');
+    document.getElementById('tokenInput').focus();
+    return;
+  }
+  var totalChanges = getLocalOnly().length + getDeletedIds().length;
+  var msg = totalChanges > 0
+    ? '📡 确认一键发布？\n\n新增/修改 ' + getLocalOnly().length + ' 条 + 删除 ' + getDeletedIds().length + ' 条\n共 ' + memories.length + ' 条记忆将更新到网站\n\n所有人将立即看到最新内容！'
+    : '📡 当前没有待发布的修改。\n\n当前共 ' + memories.length + ' 条记忆。\n\n确定要重新发布吗？';
+  if (!confirm(msg)) return;
+  doPublish(token);
+});
+
+function doPublish(token) {
+  var btn = document.getElementById('publishBtn');
+  var origText = btn.textContent;
+  btn.textContent = '⏳ 发布中...';
+  btn.disabled = true;
+
+  var allMemories = loadMemories();
+  var jsContent = '/**\n * 🌟 共享记忆数据 — 自动发布于 ' + new Date().toLocaleString('zh-CN') + '\n * 共 ' + allMemories.length + ' 条记忆\n */\nconst SHARED_MEMORIES = ' + JSON.stringify(allMemories, null, 2) + ';\n';
+
+  var owner = 'liangboss6';
+  var repo = 'GitHub-Chinese-Top-Charts';
+  var path = 'docs/memories-data.js';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, true);
+  xhr.setRequestHeader('Authorization', 'token ' + token);
+  xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+  xhr.onload = function() {
+    if (xhr.status !== 200) {
+      btn.textContent = origText; btn.disabled = false;
+      alert('❌ 获取文件信息失败 (' + xhr.status + ')\n请检查 Token 是否正确。');
+      return;
+    }
+    var data = JSON.parse(xhr.responseText);
+    var sha = data.sha;
+
+    var putXhr = new XMLHttpRequest();
+    putXhr.open('PUT', 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, true);
+    putXhr.setRequestHeader('Authorization', 'token ' + token);
+    putXhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+    putXhr.setRequestHeader('Content-Type', 'application/json');
+    putXhr.onload = function() {
+      btn.textContent = origText; btn.disabled = false;
+      if (putXhr.status === 200 || putXhr.status === 201) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(DELETED_KEY);
+        memories = loadMemories();
+        renderAll();
+        spawnSparkles(btn);
+        alert('✅ 发布成功！\n\n🌐 约 30 秒后刷新网站即可看到最新内容。\n\n已删除的内容已永久清除，不会再出现。');
+      } else {
+        try {
+          var err = JSON.parse(putXhr.responseText);
+          alert('❌ 发布失败：' + (err.message || '未知错误') + '\n\n请检查 Token 是否有 repo 权限。');
+        } catch(e2) {
+          alert('❌ 发布失败 (' + putXhr.status + ')\n请检查 Token 是否正确。');
+        }
+      }
+    };
+    putXhr.onerror = function() {
+      btn.textContent = origText; btn.disabled = false;
+      alert('❌ 网络错误，请检查网络连接后重试。');
+    };
+    var body = JSON.stringify({
+      message: '📡 自动发布：' + allMemories.length + ' 条记忆',
+      content: btoa(unescape(encodeURIComponent(jsContent))),
+      sha: sha,
+      branch: 'master'
+    });
+    putXhr.send(body);
+  };
+  xhr.onerror = function() {
+    btn.textContent = origText; btn.disabled = false;
+    alert('❌ 网络错误，请检查网络连接后重试。');
+  };
+  xhr.send();
+}
+
+/* ============================================
+   📥📤 备份/恢复/重置
+   ============================================ */
+document.getElementById('exportBtn').addEventListener('click', function() {
+  var all = loadMemories();
+  var blob = new Blob([JSON.stringify(all, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
   a.href = url;
-  a.download = '小星星完整备份_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = '小星星备份_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
   URL.revokeObjectURL(url);
   spawnSparkles(document.getElementById('exportBtn'));
 });
 
-// 📤 从备份恢复
-document.getElementById('importBtn').addEventListener('click', () => {
+document.getElementById('importBtn').addEventListener('click', function() {
   document.getElementById('importFile').click();
 });
 
 document.getElementById('importFile').addEventListener('change', function(e) {
-  const file = e.target.files[0];
+  var file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
+  var reader = new FileReader();
   reader.onload = function(ev) {
     try {
-      const data = JSON.parse(ev.target.result);
-      if (!Array.isArray(data)) throw new Error('格式不正确');
-      const sharedIds = getSharedIds();
-      const localData = data.filter(m => m.id.startsWith('u') || !sharedIds.includes(m.id));
-      if (confirm('即将恢复 ' + localData.length + ' 条本地记忆。\n当前本地数据将被替换，确定继续吗？')) {
-        saveLocal(localData);
+      var data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error('格式不对');
+      if (confirm('即将导入 ' + data.length + ' 条记忆。当前所有本地修改和删除记录将被清除，确定继续吗？')) {
+        localStorage.removeItem(DELETED_KEY);
+        saveLocal(data);
         memories = loadMemories();
         renderAll();
-        updateLocalCount();
         spawnSparkles(document.getElementById('importBtn'));
       }
-    } catch(err) {
-      alert('❌ 文件格式不正确，请选择之前导出的 .json 备份文件。');
-    }
+    } catch(err) { alert('❌ 文件格式不正确。'); }
   };
   reader.readAsText(file);
   this.value = '';
 });
 
-// 🔄 重置本地数据
-document.getElementById('resetBtn').addEventListener('click', () => {
-  if (confirm('确定要清除所有本地修改吗？\n\n这将删除你添加的所有记忆和修改。\n共享记忆不会受影响。')) {
+document.getElementById('resetBtn').addEventListener('click', function() {
+  if (confirm('确定要清除所有本地数据吗？\n\n这将：\n• 清除你添加的所有记忆\n• 清除所有删除标记\n• 恢复为网站默认内容')) {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(DELETED_KEY);
     memories = loadMemories();
     renderAll();
-    updateLocalCount();
     spawnSparkles(document.getElementById('resetBtn'));
-    alert('🔄 已清除本地数据。共享记忆保持不变。');
   }
 });
 
-// 更新本地记忆计数
-function updateLocalCount() {
-  const local = getLocalOnly();
-  const el = document.getElementById('localCount');
-  if (el) el.textContent = local.length;
-  const hint = document.getElementById('dataHint');
-  if (!hint) return;
-  if (local.length > 0) {
-    hint.style.color = 'var(--coral)';
-    hint.innerHTML = '💡 <span id="localCount">' + local.length + '</span> 条本地记忆等待<a href="javascript:void(0)" onclick="document.getElementById(\'publishBtn\').click()" style="color:var(--coral);text-decoration:underline;">📡 发布</a>';
+function updateLocalBadge() {
+  var local = getLocalOnly();
+  var deleted = getDeletedIds();
+  var total = local.length + deleted.length;
+  var badge = document.getElementById('localBadge');
+  if (!badge) return;
+  if (total > 0) {
+    badge.style.color = 'var(--coral)';
+    badge.innerHTML = '💡 ' + local.length + ' 条新增 / ' + deleted.length + ' 条待删除 — <a href="javascript:void(0)" onclick="document.getElementById(\'publishBtn\').click()" style="color:var(--coral);text-decoration:underline;font-weight:700;">📡 一键发布</a>';
   } else {
-    hint.style.color = 'var(--text-lighter)';
-    hint.innerHTML = '💡 <span id="localCount">0</span> 条本地记忆，所有内容已同步';
+    badge.style.color = 'var(--text-lighter)';
+    badge.innerHTML = '💡 内容已是最新，无需发布 ✅';
   }
 }
-
-setTimeout(updateLocalCount, 500);
 
 /* ============================================
    🎨 MAGIC PARTICLE CANVAS
    ============================================ */
 (function() {
-  const canvas = document.getElementById('magic-canvas');
-  const ctx = canvas.getContext('2d');
-  let particles = [], animId, w, h;
-
-  function resize() { w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
-
-  const symbols = ['✨','⭐','💫','🌟','•','·','∘','✧'];
-  const colors = [
-    'rgba(255,180,150,','rgba(255,213,79,','rgba(255,184,201,',
-    'rgba(200,240,222,','rgba(201,228,242,','rgba(228,215,245,',
-  ];
-
+  var canvas = document.getElementById('magic-canvas');
+  var ctx = canvas.getContext('2d');
+  var particles = [], animId, w, h;
+  function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+  var symbols = ['✨','⭐','💫','🌟','•','·','∘','✧'];
+  var colors = ['rgba(255,180,150,','rgba(255,213,79,','rgba(255,184,201,','rgba(200,240,222,','rgba(201,228,242,','rgba(228,215,245,'];
   function createParticle() {
     return {
-      x:Math.random()*w, y:-20, size:4+Math.random()*8,
-      speed:0.3+Math.random()*1.2, drift:(Math.random()-0.5)*1.5,
-      wobble:Math.random()*Math.PI*2, wobbleSpeed:0.01+Math.random()*0.02,
-      opacity:0.2+Math.random()*0.5,
-      color:colors[Math.floor(Math.random()*colors.length)],
-      shape:Math.random()>0.7?symbols[Math.floor(Math.random()*symbols.length)]:null,
+      x: Math.random()*w, y: -20, size: 4+Math.random()*8,
+      speed: 0.3+Math.random()*1.2, drift: (Math.random()-0.5)*1.5,
+      wobble: Math.random()*Math.PI*2, wobbleSpeed: 0.01+Math.random()*0.02,
+      opacity: 0.2+Math.random()*0.5,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      shape: Math.random() > 0.7 ? symbols[Math.floor(Math.random()*symbols.length)] : null,
     };
   }
-
   function drawParticle(p) {
-    ctx.save();
-    ctx.globalAlpha=p.opacity;
-    if (p.shape) {
-      ctx.font=`${p.size*2}px serif`;
-      ctx.fillText(p.shape,p.x,p.y);
-    } else {
-      ctx.fillStyle=p.color+p.opacity+')';
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
-      const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size*2);
-      g.addColorStop(0,p.color+(p.opacity*0.5)+')'); g.addColorStop(1,p.color+'0)');
-      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,p.size*2,0,Math.PI*2); ctx.fill();
+    ctx.save(); ctx.globalAlpha = p.opacity;
+    if (p.shape) { ctx.font = (p.size*2) + 'px serif'; ctx.fillText(p.shape, p.x, p.y); }
+    else {
+      ctx.fillStyle = p.color + p.opacity + ')';
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+      var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size*2);
+      g.addColorStop(0, p.color + (p.opacity*0.5) + ')'); g.addColorStop(1, p.color + '0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, p.size*2, 0, Math.PI*2); ctx.fill();
     }
     ctx.restore();
   }
-
   function animate() {
-    ctx.clearRect(0,0,w,h);
-    particles.forEach(p=>{
-      p.y+=p.speed; p.wobble+=p.wobbleSpeed; p.x+=Math.sin(p.wobble)*p.drift;
-      if(p.y>h+40){p.y=-20;p.x=Math.random()*w;}
-      if(p.x<-40)p.x=w+40; if(p.x>w+40)p.x=-40;
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(function(p) {
+      p.y += p.speed; p.wobble += p.wobbleSpeed; p.x += Math.sin(p.wobble) * p.drift;
+      if (p.y > h+40) { p.y = -20; p.x = Math.random()*w; }
+      if (p.x < -40) p.x = w+40; if (p.x > w+40) p.x = -40;
       drawParticle(p);
     });
-    if(particles.length<50&&Math.random()>0.7) particles.push(createParticle());
-    animId=requestAnimationFrame(animate);
+    if (particles.length < 50 && Math.random() > 0.7) particles.push(createParticle());
+    animId = requestAnimationFrame(animate);
   }
-
-  function init() { resize(); particles=Array.from({length:30},createParticle); if(animId)cancelAnimationFrame(animId); animate(); }
-  window.addEventListener('resize',resize);
+  function init() { resize(); particles = Array.from({length:30}, createParticle); if (animId) cancelAnimationFrame(animId); animate(); }
+  window.addEventListener('resize', resize);
   init();
 })();
 
 /* ============================================
    👁️ SCROLL REVEAL
    ============================================ */
-let revealObserver;
+var revealObserver;
 function observeRevealElements() {
   if (revealObserver) revealObserver.disconnect();
-  revealObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => { if(entry.isIntersecting){entry.target.classList.add('visible');revealObserver.unobserve(entry.target);} });
-  }, {threshold:0.15,rootMargin:'0px 0px -40px 0px'});
-  document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
+  revealObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) { if (entry.isIntersecting) { entry.target.classList.add('visible'); revealObserver.unobserve(entry.target); } });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach(function(el) { revealObserver.observe(el); });
 }
 
 /* ============================================
    🧭 NAVIGATION
    ============================================ */
-const navToggle=document.getElementById('navToggle'), navLinks=document.getElementById('navLinks');
-navToggle.addEventListener('click',()=>navLinks.classList.toggle('active'));
-navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('active')));
-
-const sections=['hero','photos','videos','stories','timeline'];
-const navAnchors=document.querySelectorAll('.nav-links a');
-function updateActiveNav(){
-  const scrollPos=window.scrollY+100;
-  let active='hero';
-  sections.forEach(id=>{const el=document.getElementById(id);if(el&&el.offsetTop<=scrollPos)active=id;});
-  navAnchors.forEach(a=>a.classList.toggle('active',a.dataset.section===active));
+var navToggle = document.getElementById('navToggle'), navLinks = document.getElementById('navLinks');
+navToggle.addEventListener('click', function() { navLinks.classList.toggle('active'); });
+navLinks.querySelectorAll('a').forEach(function(a) { a.addEventListener('click', function() { navLinks.classList.remove('active'); }); });
+var sections = ['hero','photos','videos','stories','timeline'];
+var navAnchors = document.querySelectorAll('.nav-links a');
+function updateActiveNav() {
+  var scrollPos = window.scrollY + 100;
+  var active = 'hero';
+  sections.forEach(function(id) { var el = document.getElementById(id); if (el && el.offsetTop <= scrollPos) active = id; });
+  navAnchors.forEach(function(a) { a.classList.toggle('active', a.dataset.section === active); });
 }
-function updateNavStyle(){document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>50);}
-window.addEventListener('scroll',()=>{updateActiveNav();updateNavStyle();});
+function updateNavStyle() { document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50); }
+window.addEventListener('scroll', function() { updateActiveNav(); updateNavStyle(); });
 
 /* ============================================
    🚀 INIT
    ============================================ */
-function init(){
+function init() {
   renderAll();
   observeRevealElements();
   updateActiveNav();
   updateNavStyle();
+  var savedToken = getToken();
+  if (savedToken) document.getElementById('tokenInput').value = savedToken;
 }
 init();
-
-console.log('🌟 欢迎来到小星星的魔法世界！\n💡 底部有导入/导出按钮，可以分享记忆数据给家人。');
+console.log('🌟 小星星的魔法世界已就绪！\n🔐 首次使用请在底部输入 GitHub Token，之后即可一键发布。');
 </script>
 </body>
 </html>
