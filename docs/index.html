@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌟 小星星的魔法世界</title>
+<meta name="description" content="专属于小星星的成长魔法书，珍藏每一个闪闪发光的瞬间">
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================
+   🌈 CSS VARIABLES — 魔法调色盘
+   ============================================ */
+:root {
+  --cream: #FFF8EC;
+  --peach: #FFE8D6;
+  --sky: #C9E4F2;
+  --lavender: #E4D7F5;
+  --mint: #C8F0DE;
+  --coral: #FFA585;
+  --golden: #FFD54F;
+  --rose: #FFB8C9;
+  --teal: #7EC8E3;
+  --warm-brown: #C49A6C;
+  --text: #4A3228;
+  --text-light: #8B6F5E;
+  --text-lighter: #B09A8A;
+  --card-bg: rgba(255,255,255,0.75);
+  --card-shadow: 0 8px 32px rgba(180,140,120,0.15);
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 32px;
+  --font-display: 'ZCOOL KuaiLe', cursive;
+  --font-body: 'Noto Sans SC', sans-serif;
+  --font-story: 'Noto Serif SC', serif;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--cream);
+  overflow-x: hidden;
+  line-height: 1.7;
+}
+
+/* ============================================
+   ✨ MAGICAL CANVAS BACKGROUND
+   ============================================ */
+#magic-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================
+   🌙 FLOATING DECORATIONS
+   ============================================ */
+.floating-decor {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  animation: floatAround 20s ease-in-out infinite;
+}
+.floating-decor:nth-child(1) { top: 10%; left: 5%; font-size: 3rem; animation-delay: 0s; animation-duration: 22s; }
+.floating-decor:nth-child(2) { top: 20%; right: 8%; font-size: 2.5rem; animation-delay: -5s; animation-duration: 18s; }
+.floating-decor:nth-child(3) { top: 60%; left: 3%; font-size: 2rem; animation-delay: -10s; animation-duration: 25s; }
+.floating-decor:nth-child(4) { top: 70%; right: 5%; font-size: 3.5rem; animation-delay: -15s; animation-duration: 20s; }
+.floating-decor:nth-child(5) { top: 35%; left: 90%; font-size: 2.8rem; animation-delay: -7s; animation-duration: 23s; }
+.floating-decor:nth-child(6) { top: 85%; left: 50%; font-size: 2.2rem; animation-delay: -12s; animation-duration: 21s; }
+
+@keyframes floatAround {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  25% { transform: translate(30px, -40px) rotate(5deg) scale(1.1); }
+  50% { transform: translate(-20px, -15px) rotate(-3deg) scale(0.95); }
+  75% { transform: translate(-35px, 25px) rotate(4deg) scale(1.05); }
+}
+
+/* ============================================
+   🧭 NAVIGATION — 魔法导航
+   ============================================ */
+.magic-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 12px 24px;
+  background: rgba(255,248,236,0.85);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border-bottom: 2px solid rgba(255,180,150,0.3);
+  transition: all 0.4s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.magic-nav.scrolled {
+  padding: 8px 24px;
+  box-shadow: 0 4px 24px rgba(180,140,120,0.12);
+  background: rgba(255,248,236,0.92);
+}
+.nav-brand {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--coral);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: transform 0.3s ease;
+}
+.nav-brand:hover { transform: scale(1.05); }
+.nav-brand .star-icon {
+  display: inline-block;
+  animation: twinkle 1.5s ease-in-out infinite;
+}
+.nav-links {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.nav-links a {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--text-light);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 999px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.nav-links a:hover,
+.nav-links a.active {
+  color: var(--coral);
+  background: rgba(255,165,133,0.12);
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 2px; left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 20px; height: 3px;
+  background: var(--golden);
+  border-radius: 3px;
+  transition: transform 0.3s ease;
+}
+.nav-links a:hover::after,
+.nav-links a.active::after { transform: translateX(-50%) scaleX(1); }
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: var(--coral);
+  padding: 4px 8px;
+}
+@keyframes twinkle {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+/* ============================================
+   📖 HERO — 魔法书封面
+   ============================================ */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  padding: 120px 24px 80px;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(255,213,79,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(255,165,133,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(201,228,242,0.2) 0%, transparent 60%);
+  z-index: -1;
+  animation: bgShift 15s ease-in-out infinite;
+}
+@keyframes bgShift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(1%, -1%); }
+  66% { transform: translate(-1%, 1%); }
+}
+.hero-book-frame {
+  width: 180px; height: 220px;
+  background: linear-gradient(135deg, #FFF8EC 0%, #FFE8D6 50%, #FFD4C0 100%);
+  border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 8px;
+  box-shadow:
+    0 20px 60px rgba(180,140,120,0.2),
+    4px 4px 0 #E8C8B0,
+    inset 0 0 60px rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 6rem;
+  position: relative;
+  margin: 0 auto 40px;
+  animation: bookFloat 4s ease-in-out infinite;
+  border: 4px solid #D4A88C;
+}
+.hero-book-frame::after {
+  content: '';
+  position: absolute;
+  left: 8px; top: 0; bottom: 0;
+  width: 3px;
+  background: rgba(180,140,120,0.3);
+  border-radius: 3px;
+}
+@keyframes bookFloat {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-15px) rotate(1deg); }
+}
+.hero-star {
+  position: absolute;
+  animation: heroStarFloat 3s ease-in-out infinite;
+}
+.hero-star:nth-child(1) { top: -20px; left: -10px; font-size: 2rem; }
+.hero-star:nth-child(2) { top: -30px; right: -5px; font-size: 1.5rem; animation-delay: 0.5s; }
+.hero-star:nth-child(3) { bottom: -15px; left: 20px; font-size: 1.8rem; animation-delay: 1s; }
+.hero-star:nth-child(4) { bottom: -25px; right: 15px; font-size: 2.2rem; animation-delay: 1.5s; }
+@keyframes heroStarFloat {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+  50% { transform: translateY(-12px) scale(1.2); opacity: 1; }
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  color: var(--text);
+  line-height: 1.3;
+  margin-bottom: 16px;
+}
+.hero-title .highlight {
+  background: linear-gradient(120deg, var(--coral), var(--rose));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-subtitle {
+  font-family: var(--font-story);
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+  color: var(--text-light);
+  margin-bottom: 32px;
+  max-width: 500px;
+}
+.hero-scroll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-lighter);
+  font-size: 0.9rem;
+  animation: bounceDown 2s ease-in-out infinite;
+  cursor: pointer;
+}
+.hero-scroll-arrow {
+  width: 32px; height: 32px;
+  border-right: 3px solid var(--text-lighter);
+  border-bottom: 3px solid var(--text-lighter);
+  transform: rotate(45deg);
+  border-radius: 3px;
+}
+@keyframes bounceDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(12px); }
+}
+
+/* ============================================
+   📸 SECTIONS
+   ============================================ */
+.section {
+  position: relative;
+  z-index: 1;
+  padding: 80px 24px;
+}
+.section-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.section-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  display: block;
+  animation: floatEmoji 3s ease-in-out infinite;
+}
+@keyframes floatEmoji {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.section-desc {
+  color: var(--text-light);
+  font-size: 1.05rem;
+}
+
+/* Photo Wall */
+.photo-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.photo-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-sm);
+  padding: 12px 12px 20px;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transform: rotate(var(--rot, 0deg));
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.6);
+  position: relative;
+}
+.photo-card:nth-child(odd) { --rot: -2deg; }
+.photo-card:nth-child(even) { --rot: 2.5deg; }
+.photo-card:nth-child(3n) { --rot: -1.5deg; margin-top: 8px; }
+.photo-card:hover {
+  transform: rotate(0deg) scale(1.04) translateY(-8px);
+  box-shadow: 0 20px 48px rgba(180,140,120,0.25);
+  z-index: 10;
+}
+.photo-card-img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--peach), var(--sky), var(--lavender));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  position: relative;
+  overflow: hidden;
+}
+.photo-card-img img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.photo-card-tape {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(var(--tape-rot, -3deg));
+  width: 60px; height: 24px;
+  background: rgba(255,255,220,0.7);
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 2;
+}
+.photo-card:nth-child(even) .photo-card-tape { --tape-rot: 4deg; }
+.photo-card-caption {
+  margin-top: 10px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--text);
+  text-align: center;
+}
+.photo-card-date {
+  font-size: 0.75rem;
+  color: var(--text-lighter);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Video Grid */
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.video-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(255,255,255,0.6);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+}
+.video-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 24px 56px rgba(180,140,120,0.25);
+}
+.video-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: linear-gradient(135deg, #2a2a3a, #1a1a2e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.video-thumb video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.video-play-btn {
+  width: 68px; height: 68px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--coral);
+  transition: all 0.3s ease;
+  position: absolute;
+  z-index: 2;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.video-card:hover .video-play-btn {
+  transform: scale(1.15);
+  background: var(--coral);
+  color: white;
+}
+.video-info {
+  padding: 20px;
+}
+.video-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.video-date {
+  font-size: 0.8rem;
+  color: var(--text-lighter);
+}
+
+/* Stories */
+.stories-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.story-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(255,255,255,0.6);
+  position: relative;
+  transition: all 0.4s ease;
+}
+.story-card:hover {
+  transform: translateX(6px);
+  box-shadow: 0 16px 48px rgba(180,140,120,0.2);
+}
+.story-card::before {
+  content: '📖';
+  position: absolute;
+  top: -18px; left: 24px;
+  font-size: 2rem;
+  background: var(--cream);
+  padding: 0 8px;
+  border-radius: 50%;
+}
+.story-card:nth-child(even) { margin-left: 40px; }
+.story-card:nth-child(odd) { margin-right: 40px; }
+.story-date {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--coral);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.story-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.story-body {
+  font-family: var(--font-story);
+  font-size: 1rem;
+  color: var(--text-light);
+  line-height: 1.9;
+}
+.story-deco {
+  position: absolute;
+  font-size: 1.5rem;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.story-deco:nth-child(1) { top: -10px; right: 20px; animation: floatEmoji 4s ease-in-out infinite; }
+.story-deco:nth-child(2) { bottom: -8px; right: 40px; animation: floatEmoji 3.5s ease-in-out 1s infinite; }
+
+/* Timeline */
+.timeline {
+  max-width: 700px;
+  margin: 0 auto;
+  position: relative;
+  padding-left: 48px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 20px; top: 0; bottom: 0;
+  width: 4px;
+  background: linear-gradient(to bottom,
+    var(--coral), var(--golden), var(--mint), var(--sky), var(--lavender), var(--rose));
+  border-radius: 4px;
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 40px;
+  padding: 20px 24px;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(255,255,255,0.6);
+  transition: all 0.4s ease;
+}
+.timeline-item:hover {
+  transform: translateX(8px);
+  box-shadow: 0 16px 40px rgba(180,140,120,0.2);
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -38px; top: 28px;
+  width: 14px; height: 14px;
+  background: var(--golden);
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 0 0 4px var(--coral);
+}
+.timeline-item:nth-child(3n)::before { box-shadow: 0 0 0 4px var(--teal); }
+.timeline-item:nth-child(3n+2)::before { box-shadow: 0 0 0 4px var(--lavender); }
+.timeline-date {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--coral);
+  margin-bottom: 4px;
+}
+.timeline-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.timeline-desc {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+.timeline-emoji {
+  position: absolute;
+  right: 16px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 2.5rem;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ============================================
+   ➕ ADD MEMORY BUTTON
+   ============================================ */
+.add-memory-btn {
+  position: fixed;
+  bottom: 32px; right: 32px;
+  width: 60px; height: 60px;
+  background: linear-gradient(135deg, var(--coral), var(--rose));
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 999;
+  box-shadow: 0 8px 32px rgba(255,165,133,0.4);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.add-memory-btn:hover {
+  transform: scale(1.12) rotate(90deg);
+  box-shadow: 0 12px 40px rgba(255,165,133,0.55);
+}
+
+/* ============================================
+   📋 MODAL
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal {
+  background: var(--cream);
+  border-radius: var(--radius-lg);
+  padding: 40px 36px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.2);
+  position: relative;
+  border: 3px solid rgba(255,180,150,0.4);
+  transform: translateY(20px);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.modal-overlay.active .modal { transform: translateY(0); }
+.modal-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.06);
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-close:hover {
+  background: rgba(0,0,0,0.12);
+  transform: rotate(90deg);
+}
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--text);
+  margin-bottom: 24px;
+  text-align: center;
+}
+.form-group { margin-bottom: 20px; }
+.form-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid rgba(180,140,120,0.2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text);
+  background: rgba(255,255,255,0.7);
+  transition: all 0.3s ease;
+  resize: vertical;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--coral);
+  box-shadow: 0 0 0 4px rgba(255,165,133,0.12);
+}
+.form-textarea { min-height: 100px; }
+.form-file {
+  display: block;
+  width: 100%;
+  padding: 32px 16px;
+  border: 3px dashed rgba(180,140,120,0.25);
+  border-radius: var(--radius-md);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-lighter);
+  font-size: 0.9rem;
+}
+.form-file:hover {
+  border-color: var(--coral);
+  background: rgba(255,165,133,0.05);
+}
+.form-file input[type="file"] { display: none; }
+.form-file-preview {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.form-file-preview img, .form-file-preview video {
+  width: 80px; height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid rgba(255,255,255,0.6);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--coral), var(--rose));
+  color: white;
+  box-shadow: 0 4px 20px rgba(255,165,133,0.35);
+  width: 100%;
+  justify-content: center;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(255,165,133,0.5);
+}
+.btn-danger {
+  background: transparent;
+  color: #e88;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  position: absolute;
+  top: 8px; right: 8px;
+  z-index: 5;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+}
+.btn-danger:hover { background: rgba(255,100,100,0.1); }
+
+/* ============================================
+   🖼️ LIGHTBOX
+   ============================================ */
+.lightbox {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+}
+.lightbox.active { opacity: 1; pointer-events: all; }
+.lightbox-content {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+  transform: scale(0.9);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.lightbox.active .lightbox-content { transform: scale(1); }
+.lightbox-close {
+  position: absolute;
+  top: 24px; right: 24px;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.4);
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+.lightbox-close:hover {
+  background: rgba(255,255,255,0.2);
+  transform: rotate(90deg);
+}
+
+/* ============================================
+   🎪 FOOTER & ADMIN TOOLS
+   ============================================ */
+.footer {
+  text-align: center;
+  padding: 60px 24px 80px;
+  position: relative;
+  z-index: 1;
+}
+.footer-clouds {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  font-size: 2rem;
+  animation: floatEmoji 4s ease-in-out infinite;
+}
+.footer-text {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+.footer-sub {
+  font-size: 0.85rem;
+  color: var(--text-lighter);
+}
+.admin-tools {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn-admin {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(180,140,120,0.2);
+  background: rgba(255,255,255,0.5);
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-admin:hover {
+  border-color: var(--coral);
+  color: var(--coral);
+  background: rgba(255,165,133,0.08);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-lighter);
+  grid-column: 1 / -1;
+}
+.empty-state-emoji { font-size: 4rem; display: block; margin-bottom: 16px; }
+.empty-state-text {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+/* Scroll Reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+/* Sparkle */
+.video-sparkle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  animation: sparklePoof 0.8s ease-out forwards;
+}
+@keyframes sparklePoof {
+  0% { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--sx), var(--sy)) scale(0); opacity: 0; }
+}
+
+/* ============================================
+   📱 RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .nav-links {
+    position: fixed;
+    top: 0; right: -100%;
+    width: 260px; height: 100vh;
+    flex-direction: column;
+    background: rgba(255,248,236,0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 80px 24px 24px;
+    gap: 4px;
+    transition: right 0.4s ease;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+  }
+  .nav-links.active { right: 0; }
+  .nav-links a { font-size: 1.1rem; padding: 12px 16px; display: block; }
+  .nav-toggle { display: block; z-index: 1001; }
+  .photo-wall { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+  .video-grid { grid-template-columns: 1fr; }
+  .story-card:nth-child(even), .story-card:nth-child(odd) { margin-left: 0; margin-right: 0; }
+  .timeline { padding-left: 36px; }
+  .modal { padding: 28px 20px; }
+  .add-memory-btn { bottom: 20px; right: 20px; width: 52px; height: 52px; }
+}
+
+@media (max-width: 480px) {
+  .hero-title { font-size: 2rem; }
+  .photo-wall { grid-template-columns: 1fr; }
+  .section { padding: 56px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 🌙 Floating Decorations -->
+<div class="floating-decor" aria-hidden="true">☁️</div>
+<div class="floating-decor" aria-hidden="true">⭐</div>
+<div class="floating-decor" aria-hidden="true">🌈</div>
+<div class="floating-decor" aria-hidden="true">🦋</div>
+<div class="floating-decor" aria-hidden="true">🌙</div>
+<div class="floating-decor" aria-hidden="true">🌸</div>
+
+<!-- ✨ Magic Particle Canvas -->
+<canvas id="magic-canvas"></canvas>
+
+<!-- 🧭 Navigation -->
+<nav class="magic-nav" id="navbar">
+  <a href="#hero" class="nav-brand">
+    <span class="star-icon">⭐</span> 我的小星星
+  </a>
+  <button class="nav-toggle" id="navToggle" aria-label="菜单">📖</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#photos" data-section="photos">📸 照片墙</a></li>
+    <li><a href="#videos" data-section="videos">🎬 小影院</a></li>
+    <li><a href="#stories" data-section="stories">📝 成长故事</a></li>
+    <li><a href="#timeline" data-section="timeline">⏳ 时光轴</a></li>
+  </ul>
+</nav>
+
+<!-- 📖 Hero -->
+<section class="hero" id="hero">
+  <div class="hero-book-frame">
+    👶
+    <span class="hero-star">✨</span>
+    <span class="hero-star">💫</span>
+    <span class="hero-star">🌟</span>
+    <span class="hero-star">⭐</span>
+  </div>
+  <h1 class="hero-title">
+    欢迎来到<br><span class="highlight">小星星</span>的魔法世界
+  </h1>
+  <p class="hero-subtitle">
+    这里收藏着每一个珍贵的瞬间，每一段美好的回忆<br>
+    翻开这本魔法书，一起重温成长的奇妙旅程
+  </p>
+  <div class="hero-scroll" onclick="document.getElementById('photos').scrollIntoView({behavior:'smooth'})">
+    <span>翻开魔法书</span>
+    <div class="hero-scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- 📸 Photo Gallery -->
+<section class="section" id="photos">
+  <div class="section-header reveal">
+    <span class="section-icon">📸</span>
+    <h2 class="section-title">魔法相册</h2>
+    <p class="section-desc">每一张照片，都是一个闪闪发光的瞬间 ✨</p>
+  </div>
+  <div class="photo-wall" id="photoWall"></div>
+</section>
+
+<!-- 🎬 Video Collection -->
+<section class="section" id="videos">
+  <div class="section-header reveal">
+    <span class="section-icon">🎬</span>
+    <h2 class="section-title">小影院</h2>
+    <p class="section-desc">会动的记忆，让欢笑永远鲜活 🎥</p>
+  </div>
+  <div class="video-grid" id="videoGrid"></div>
+</section>
+
+<!-- 📝 Stories -->
+<section class="section" id="stories">
+  <div class="section-header reveal">
+    <span class="section-icon">📝</span>
+    <h2 class="section-title">成长故事</h2>
+    <p class="section-desc">每一个故事，都是成长路上的一颗星星 📖</p>
+  </div>
+  <div class="stories-container" id="storiesContainer"></div>
+</section>
+
+<!-- ⏳ Timeline -->
+<section class="section" id="timeline">
+  <div class="section-header reveal">
+    <span class="section-icon">⏳</span>
+    <h2 class="section-title">时光轴</h2>
+    <p class="section-desc">沿着成长的足迹，一路走来 🌈</p>
+  </div>
+  <div class="timeline" id="timelineContainer"></div>
+</section>
+
+<!-- 🎪 Footer -->
+<footer class="footer">
+  <div class="footer-clouds">
+    <span>🌈</span><span>⭐</span><span>🦋</span><span>🌸</span><span>🌟</span>
+  </div>
+  <p class="footer-text">用 ❤️ 记录小星星的每一个成长瞬间</p>
+  <p class="footer-sub">永远爱你，我的宝贝 ✨</p>
+  <div class="admin-tools">
+    <button class="btn-admin" id="exportBtn" title="导出所有记忆数据为文件">📥 导出数据</button>
+    <button class="btn-admin" id="importBtn" title="从文件导入记忆数据">📤 导入数据</button>
+    <input type="file" id="importFile" accept=".json" style="display:none">
+    <button class="btn-admin" id="resetBtn" title="恢复默认示例数据">🔄 恢复默认</button>
+  </div>
+</footer>
+
+<!-- ➕ Add Memory Button -->
+<button class="add-memory-btn" id="addMemoryBtn" title="添加新的回忆" aria-label="添加新的回忆">✏️</button>
+
+<!-- 📋 Add Memory Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modalClose" aria-label="关闭">✕</button>
+    <h3 class="modal-title">✨ 添加新的魔法记忆</h3>
+    <form id="memoryForm">
+      <div class="form-group">
+        <label class="form-label" for="memType">记忆类型</label>
+        <select class="form-select" id="memType" required>
+          <option value="photo">📸 照片</option>
+          <option value="video">🎬 视频</option>
+          <option value="story">📝 故事</option>
+          <option value="milestone">⏳ 里程碑</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="memTitle">标题</label>
+        <input class="form-input" type="text" id="memTitle" placeholder="给这个记忆起个名字..." required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="memDate">日期</label>
+        <input class="form-input" type="date" id="memDate" required>
+      </div>
+      <div class="form-group" id="fileGroup">
+        <label class="form-label">上传文件</label>
+        <label class="form-file" id="fileLabel">
+          <span id="fileLabelText">📁 点击选择照片或视频文件</span>
+          <input type="file" id="memFile" accept="image/*,video/*">
+        </label>
+        <div class="form-file-preview" id="filePreview"></div>
+      </div>
+      <div class="form-group" id="descGroup">
+        <label class="form-label" for="memDesc">描述 / 故事内容</label>
+        <textarea class="form-textarea" id="memDesc" placeholder="写下这个瞬间的故事..." rows="4"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">🌟 保存魔法记忆</button>
+    </form>
+  </div>
+</div>
+
+<!-- 🖼️ Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="关闭">✕</button>
+  <img class="lightbox-content" id="lightboxImg" alt="" src="">
+</div>
+
+<script>
+/* ============================================
+   🌟 DATA STORE
+   ============================================ */
+const STORAGE_KEY = 'myLittleStar_memories_v2';
+
+function getDefaultMemories() {
+  return [
+    { id:'m1', type:'milestone', title:'第一次睁开眼睛', date:'2023-03-15', desc:'宝宝来到这个世界的第一天，整个世界都因为他而变得更加明亮。小小的手指紧紧握住我的手，那一刻我感受到了前所未有的幸福与责任。' },
+    { id:'m2', type:'photo', title:'第一个微笑', date:'2023-05-20', desc:'你对着妈妈露出了第一个甜甜的微笑，像春日里的第一缕阳光，融化了一切的疲惫。', fileData:null },
+    { id:'m3', type:'story', title:'第一次翻身', date:'2023-08-10', desc:'今天宝宝第一次成功翻身啦！他像一只努力的小乌龟，手脚并用地蹬了好几次，终于从仰卧变成了俯卧。成功后他抬起头，眼睛亮晶晶的，仿佛在说"看，我做到了！"全家人都为他鼓掌欢呼。' },
+    { id:'m4', type:'milestone', title:'第一次叫"妈妈"', date:'2024-01-08', desc:'那是一个普通的早晨，宝宝突然清晰地喊出了"妈妈"。那一刻，眼泪忍不住流了下来。这是世界上最动听的声音。' },
+    { id:'m5', type:'photo', title:'周岁生日派对', date:'2024-03-15', desc:'一岁啦！蛋糕、气球、还有好多爱他的人围在一起。宝宝用小手抓了一把奶油，涂得满脸都是，逗得所有人哈哈大笑。', fileData:null },
+    { id:'m6', type:'story', title:'学会走路的那天', date:'2024-07-22', desc:'摇摇晃晃地，你迈出了人生的第一步。张开双臂，像一只学飞的小鸟，扑进了妈妈的怀抱。爸爸在旁边激动得差点忘了按下录像键。从今天起，世界是你的舞台。' },
+    { id:'m7', type:'video', title:'第一次去动物园', date:'2024-10-05', desc:'看到大象时，你的眼睛瞪得圆圆的，嘴巴张成了O型。长颈鹿低头看你的时候，你又兴奋又有点害怕，紧紧抱住了爸爸的脖子。', fileData:null },
+    { id:'m8', type:'milestone', title:'两岁生日快乐', date:'2025-03-15', desc:'两岁的你已经会唱生日歌了，虽然调子跑到了天上，但那是世界上最动听的旋律。你吹蜡烛时，口水喷得到处都是，可爱极了！' },
+    { id:'m9', type:'story', title:'第一次自己吃饭', date:'2025-06-18', desc:'今天给了宝宝一把小勺子，他认真地舀起一勺米饭，颤颤巍巍地送到嘴边——虽然一半洒在了围兜上，但成功的喜悦写在脸上。他说"寄几吃！"（自己吃），骄傲得像个大孩子。' },
+    { id:'m10', type:'photo', title:'夏天的泡泡时光', date:'2025-08-30', desc:'阳光下的泡泡五彩斑斓，你追着泡泡跑来跑去，笑声像银铃一样清脆。这一刻，我看到了世界上最纯粹的快乐。', fileData:null },
+  ];
+}
+
+function loadMemories() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch(e) {}
+  return getDefaultMemories();
+}
+
+function saveMemories(memories) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
+}
+
+let memories = loadMemories();
+
+/* ============================================
+   🎨 RENDER FUNCTIONS
+   ============================================ */
+function getPlaceholderBg(mem) {
+  const palettes = [
+    'linear-gradient(135deg, #FFE8D6, #C9E4F2)',
+    'linear-gradient(135deg, #E4D7F5, #FFB8C9)',
+    'linear-gradient(135deg, #C8F0DE, #FFD54F)',
+    'linear-gradient(135deg, #C9E4F2, #E4D7F5)',
+    'linear-gradient(135deg, #FFB8C9, #FFE8D6)',
+    'linear-gradient(135deg, #FFD54F, #C8F0DE)',
+  ];
+  const hash = mem.id.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  return palettes[hash % palettes.length];
+}
+
+function getPlaceholderEmoji(mem) {
+  const emojis = ['🌟','🎈','🧸','🦁','🐣','🌈','🎨','🚀','🌻','🍭','🦄','🎪','🐼','🎵','🌸','🍀'];
+  const hash = mem.id.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  return emojis[hash % emojis.length];
+}
+
+function renderPhotos() {
+  const wall = document.getElementById('photoWall');
+  const photos = memories.filter(m => m.type === 'photo');
+  if (!photos.length) {
+    wall.innerHTML = `<div class="empty-state"><span class="empty-state-emoji">📸</span><p class="empty-state-text">还没有照片呢</p><p>点击右下角的 ✏️ 按钮添加第一张照片吧～</p></div>`;
+    return;
+  }
+  wall.innerHTML = photos.map((p,i) => `
+    <div class="photo-card reveal reveal-delay-${(i%4)+1}" data-id="${p.id}">
+      <button class="btn-danger delete-memory-btn" data-id="${p.id}" title="删除">🗑️</button>
+      <div class="photo-card-img" onclick="openLightbox('${p.id}')">
+        <span class="photo-card-tape" aria-hidden="true"></span>
+        ${p.fileData
+          ? `<img src="${p.fileData}" alt="${p.title}" loading="lazy">`
+          : `<span style="background:${getPlaceholderBg(p)};width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">${getPlaceholderEmoji(p)}</span>`
+        }
+      </div>
+      <p class="photo-card-caption">${p.title}</p>
+      <p class="photo-card-date">${p.date}</p>
+    </div>
+  `).join('');
+}
+
+function renderVideos() {
+  const grid = document.getElementById('videoGrid');
+  const videos = memories.filter(m => m.type === 'video');
+  if (!videos.length) {
+    grid.innerHTML = `<div class="empty-state"><span class="empty-state-emoji">🎬</span><p class="empty-state-text">还没有视频呢</p><p>点击右下角的 ✏️ 按钮添加第一个视频吧～</p></div>`;
+    return;
+  }
+  grid.innerHTML = videos.map((v,i) => `
+    <div class="video-card reveal reveal-delay-${(i%4)+1}" data-id="${v.id}">
+      <button class="btn-danger delete-memory-btn" data-id="${v.id}" title="删除">🗑️</button>
+      <div class="video-thumb" onclick="playVideo('${v.id}')">
+        ${v.fileData
+          ? `<video src="${v.fileData}" muted preload="metadata"></video>`
+          : `<span style="background:${getPlaceholderBg(v)};width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;">${getPlaceholderEmoji(v)}</span>`
+        }
+        <div class="video-play-btn">▶</div>
+      </div>
+      <div class="video-info">
+        <p class="video-title">${v.title}</p>
+        <p class="video-date">${v.date} ${v.desc ? '— '+v.desc.slice(0,30)+'...' : ''}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderStories() {
+  const container = document.getElementById('storiesContainer');
+  const stories = memories.filter(m => m.type === 'story');
+  if (!stories.length) {
+    container.innerHTML = `<div class="empty-state"><span class="empty-state-emoji">📝</span><p class="empty-state-text">还没有故事呢</p><p>点击右下角的 ✏️ 按钮写下第一个故事吧～</p></div>`;
+    return;
+  }
+  container.innerHTML = stories.map((s,i) => `
+    <div class="story-card reveal reveal-delay-${(i%4)+1}" data-id="${s.id}">
+      <button class="btn-danger delete-memory-btn" data-id="${s.id}" title="删除">🗑️</button>
+      <span class="story-deco">${getPlaceholderEmoji(s)}</span>
+      <span class="story-deco">💫</span>
+      <div class="story-date">📅 ${s.date}</div>
+      <h3 class="story-title">${s.title}</h3>
+      <p class="story-body">${s.desc}</p>
+    </div>
+  `).join('');
+}
+
+function renderTimeline() {
+  const container = document.getElementById('timelineContainer');
+  const milestones = memories.filter(m => m.type === 'milestone').sort((a,b) => new Date(a.date) - new Date(b.date));
+  if (!milestones.length) {
+    container.innerHTML = `<div class="empty-state"><span class="empty-state-emoji">⏳</span><p class="empty-state-text">还没有里程碑呢</p><p>点击右下角的 ✏️ 按钮添加第一个里程碑吧～</p></div>`;
+    return;
+  }
+  container.innerHTML = milestones.map((m,i) => `
+    <div class="timeline-item reveal reveal-delay-${(i%4)+1}" data-id="${m.id}">
+      <button class="btn-danger delete-memory-btn" data-id="${m.id}" title="删除">🗑️</button>
+      <span class="timeline-emoji">${getPlaceholderEmoji(m)}</span>
+      <div class="timeline-date">${m.date}</div>
+      <h3 class="timeline-title">${m.title}</h3>
+      <p class="timeline-desc">${m.desc}</p>
+    </div>
+  `).join('');
+}
+
+function renderAll() {
+  renderPhotos();
+  renderVideos();
+  renderStories();
+  renderTimeline();
+  attachDeleteHandlers();
+  setTimeout(() => observeRevealElements(), 100);
+}
+
+/* ============================================
+   🗑️ DELETE
+   ============================================ */
+function attachDeleteHandlers() {
+  document.querySelectorAll('.delete-memory-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (confirm('确定要删除这条记忆吗？这个操作不能撤销哦～ 🥺')) {
+        memories = memories.filter(m => m.id !== btn.dataset.id);
+        saveMemories(memories);
+        renderAll();
+        spawnSparkles(btn);
+      }
+    });
+  });
+}
+
+/* ============================================
+   🖼️ LIGHTBOX & VIDEO
+   ============================================ */
+function openLightbox(id) {
+  const mem = memories.find(m => m.id === id);
+  if (!mem || !mem.fileData) return;
+  const img = document.getElementById('lightboxImg');
+  img.src = mem.fileData;
+  img.alt = mem.title;
+  document.getElementById('lightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('lightbox').addEventListener('click', function(e) {
+  if (e.target === this || e.target.classList.contains('lightbox-close')) closeLightbox();
+});
+document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeLightbox(); });
+
+function playVideo(id) {
+  const mem = memories.find(m => m.id === id);
+  if (!mem) return;
+  const card = document.querySelector(`.video-card[data-id="${id}"]`);
+  if (!card) return;
+  const thumb = card.querySelector('.video-thumb');
+  const existingVideo = thumb.querySelector('video');
+  if (existingVideo && existingVideo.src && !existingVideo.src.endsWith('/')) {
+    if (existingVideo.paused) { existingVideo.play(); thumb.querySelector('.video-play-btn').style.opacity='0'; }
+    else { existingVideo.pause(); thumb.querySelector('.video-play-btn').style.opacity='1'; }
+    return;
+  }
+  if (mem.fileData) {
+    thumb.innerHTML = `<video src="${mem.fileData}" controls autoplay style="width:100%;height:100%;object-fit:cover;"></video>`;
+  } else {
+    spawnSparkles(thumb.querySelector('.video-play-btn'));
+  }
+}
+
+/* ============================================
+   ✨ SPARKLE EFFECT
+   ============================================ */
+function spawnSparkles(element) {
+  const rect = element.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  const emojis = ['✨','⭐','💫','🌟','💖','🎀','🦋','🌸'];
+  for (let i=0; i<12; i++) {
+    const s = document.createElement('span');
+    s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    s.style.cssText = `position:fixed;left:${cx}px;top:${cy}px;font-size:${1+Math.random()*1.5}rem;pointer-events:none;z-index:9999;--sx:${(Math.random()-0.5)*200}px;--sy:${(Math.random()-0.5)*200}px;animation:sparklePoof 0.8s ease-out forwards;animation-delay:${Math.random()*0.2}s;`;
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),1000);
+  }
+}
+
+/* ============================================
+   📋 MODAL
+   ============================================ */
+const modalOverlay = document.getElementById('modalOverlay');
+const memoryForm = document.getElementById('memoryForm');
+const memType = document.getElementById('memType');
+
+function openModal() {
+  modalOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  memoryForm.reset();
+  document.getElementById('filePreview').innerHTML = '';
+  memoryForm._fileData = null;
+  updateFormForType();
+}
+
+function closeModalFn() {
+  modalOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('addMemoryBtn').addEventListener('click', openModal);
+document.getElementById('modalClose').addEventListener('click', closeModalFn);
+modalOverlay.addEventListener('click', e => { if (e.target===modalOverlay) closeModalFn(); });
+document.addEventListener('keydown', e => { if (e.key==='Escape'&&modalOverlay.classList.contains('active')) closeModalFn(); });
+
+memType.addEventListener('change', updateFormForType);
+
+function updateFormForType() {
+  const type = memType.value;
+  const fileGroup = document.getElementById('fileGroup');
+  const descGroup = document.getElementById('descGroup');
+  const descEl = document.getElementById('memDesc');
+  if (type==='photo'||type==='video') {
+    fileGroup.style.display='block';
+    descGroup.style.display='block';
+    descEl.required = false;
+    document.getElementById('fileLabelText').textContent = type==='photo'?'📁 点击选择照片文件':'📁 点击选择视频文件';
+    document.getElementById('memFile').accept = type==='photo'?'image/*':'video/*';
+  } else if (type==='story') {
+    fileGroup.style.display='none';
+    descGroup.style.display='block';
+    descEl.required = true;
+  } else {
+    fileGroup.style.display='none';
+    descGroup.style.display='block';
+    descEl.required = false;
+  }
+}
+
+document.getElementById('memFile').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  const preview = document.getElementById('filePreview');
+  preview.innerHTML = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    if (file.type.startsWith('image/')) preview.innerHTML = `<img src="${ev.target.result}" alt="预览">`;
+    else if (file.type.startsWith('video/')) preview.innerHTML = `<video src="${ev.target.result}" muted></video>`;
+    memoryForm._fileData = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+memoryForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const type = memType.value;
+  const title = document.getElementById('memTitle').value.trim();
+  const date = document.getElementById('memDate').value;
+  const desc = document.getElementById('memDesc').value.trim();
+  const fileData = memoryForm._fileData || null;
+  if (!title||!date) return;
+
+  const newMemory = {
+    id: 'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    type, title, date, desc, fileData,
+  };
+  memories.unshift(newMemory);
+  saveMemories(memories);
+  renderAll();
+  closeModalFn();
+  spawnSparkles(document.getElementById('addMemoryBtn'));
+
+  const sectionMap = { photo:'photos', video:'videos', story:'stories', milestone:'timeline' };
+  const targetId = sectionMap[type];
+  if (targetId) setTimeout(()=>document.getElementById(targetId).scrollIntoView({behavior:'smooth',block:'start'}),400);
+});
+
+/* ============================================
+   📥📤 EXPORT / IMPORT / RESET
+   ============================================ */
+document.getElementById('exportBtn').addEventListener('click', () => {
+  // Create export data (exclude large fileData for easier sharing, but include flag)
+  const exportData = memories.map(m => ({
+    ...m,
+    fileData: m.fileData ? '[BASE64_IMAGE_DATA]' : null,
+    // Actually keep fileData if present — the parent might want full backup
+    // For sharing with others, they can manually remove large entries
+  }));
+
+  // Also offer a "full backup" with all data
+  const fullExport = JSON.stringify(memories, null, 2);
+  const liteExport = JSON.stringify(memories.map(m => ({...m, fileData: m.fileData ? '(图片数据已保留在浏览器中)' : null})), null, 2);
+
+  const blob = new Blob([fullExport], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `小星星记忆备份_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  spawnSparkles(document.getElementById('exportBtn'));
+  alert('✅ 记忆数据已导出！\n\n💡 提示：你可以把这个文件分享给家人，他们点击"导入数据"就能看到所有记忆了。');
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+
+document.getElementById('importFile').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error('格式不正确');
+      if (confirm(`即将导入 ${data.length} 条记忆数据。\n当前数据将被替换，确定继续吗？`)) {
+        memories = data;
+        saveMemories(memories);
+        renderAll();
+        spawnSparkles(document.getElementById('importBtn'));
+        alert('✅ 导入成功！刷新页面即可看到所有记忆。');
+      }
+    } catch(err) {
+      alert('❌ 文件格式不正确，请选择之前导出的 .json 文件。');
+    }
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (confirm('确定要恢复默认示例数据吗？\n你添加的所有记忆将会丢失！')) {
+    localStorage.removeItem(STORAGE_KEY);
+    memories = getDefaultMemories();
+    renderAll();
+    spawnSparkles(document.getElementById('resetBtn'));
+    alert('🔄 已恢复默认示例数据。');
+  }
+});
+
+/* ============================================
+   🎨 MAGIC PARTICLE CANVAS
+   ============================================ */
+(function() {
+  const canvas = document.getElementById('magic-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [], animId, w, h;
+
+  function resize() { w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
+
+  const symbols = ['✨','⭐','💫','🌟','•','·','∘','✧'];
+  const colors = [
+    'rgba(255,180,150,','rgba(255,213,79,','rgba(255,184,201,',
+    'rgba(200,240,222,','rgba(201,228,242,','rgba(228,215,245,',
+  ];
+
+  function createParticle() {
+    return {
+      x:Math.random()*w, y:-20, size:4+Math.random()*8,
+      speed:0.3+Math.random()*1.2, drift:(Math.random()-0.5)*1.5,
+      wobble:Math.random()*Math.PI*2, wobbleSpeed:0.01+Math.random()*0.02,
+      opacity:0.2+Math.random()*0.5,
+      color:colors[Math.floor(Math.random()*colors.length)],
+      shape:Math.random()>0.7?symbols[Math.floor(Math.random()*symbols.length)]:null,
+    };
+  }
+
+  function drawParticle(p) {
+    ctx.save();
+    ctx.globalAlpha=p.opacity;
+    if (p.shape) {
+      ctx.font=`${p.size*2}px serif`;
+      ctx.fillText(p.shape,p.x,p.y);
+    } else {
+      ctx.fillStyle=p.color+p.opacity+')';
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+      const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size*2);
+      g.addColorStop(0,p.color+(p.opacity*0.5)+')'); g.addColorStop(1,p.color+'0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,p.size*2,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function animate() {
+    ctx.clearRect(0,0,w,h);
+    particles.forEach(p=>{
+      p.y+=p.speed; p.wobble+=p.wobbleSpeed; p.x+=Math.sin(p.wobble)*p.drift;
+      if(p.y>h+40){p.y=-20;p.x=Math.random()*w;}
+      if(p.x<-40)p.x=w+40; if(p.x>w+40)p.x=-40;
+      drawParticle(p);
+    });
+    if(particles.length<50&&Math.random()>0.7) particles.push(createParticle());
+    animId=requestAnimationFrame(animate);
+  }
+
+  function init() { resize(); particles=Array.from({length:30},createParticle); if(animId)cancelAnimationFrame(animId); animate(); }
+  window.addEventListener('resize',resize);
+  init();
+})();
+
+/* ============================================
+   👁️ SCROLL REVEAL
+   ============================================ */
+let revealObserver;
+function observeRevealElements() {
+  if (revealObserver) revealObserver.disconnect();
+  revealObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => { if(entry.isIntersecting){entry.target.classList.add('visible');revealObserver.unobserve(entry.target);} });
+  }, {threshold:0.15,rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
+}
+
+/* ============================================
+   🧭 NAVIGATION
+   ============================================ */
+const navToggle=document.getElementById('navToggle'), navLinks=document.getElementById('navLinks');
+navToggle.addEventListener('click',()=>navLinks.classList.toggle('active'));
+navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('active')));
+
+const sections=['hero','photos','videos','stories','timeline'];
+const navAnchors=document.querySelectorAll('.nav-links a');
+function updateActiveNav(){
+  const scrollPos=window.scrollY+100;
+  let active='hero';
+  sections.forEach(id=>{const el=document.getElementById(id);if(el&&el.offsetTop<=scrollPos)active=id;});
+  navAnchors.forEach(a=>a.classList.toggle('active',a.dataset.section===active));
+}
+function updateNavStyle(){document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>50);}
+window.addEventListener('scroll',()=>{updateActiveNav();updateNavStyle();});
+
+/* ============================================
+   🚀 INIT
+   ============================================ */
+function init(){
+  renderAll();
+  observeRevealElements();
+  updateActiveNav();
+  updateNavStyle();
+}
+init();
+
+console.log('🌟 欢迎来到小星星的魔法世界！\n💡 底部有导入/导出按钮，可以分享记忆数据给家人。');
+</script>
+</body>
+</html>
