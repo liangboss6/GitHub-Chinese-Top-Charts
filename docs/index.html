@@ -6,6 +6,7 @@
 <title>🌟 小星星的魔法世界</title>
 <meta name="description" content="专属于小星星的成长魔法书，珍藏每一个闪闪发光的瞬间">
 <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="memories-data.js"></script>
 <style>
 /* ============================================
    🌈 CSS VARIABLES — 魔法调色盘
@@ -1040,11 +1041,13 @@ body {
   <p class="footer-text">用 ❤️ 记录小星星的每一个成长瞬间</p>
   <p class="footer-sub">永远爱你，我的宝贝 ✨</p>
   <div class="admin-tools">
-    <button class="btn-admin" id="exportBtn" title="导出所有记忆数据为文件">📥 导出数据</button>
-    <button class="btn-admin" id="importBtn" title="从文件导入记忆数据">📤 导入数据</button>
+    <button class="btn-admin" id="publishBtn" title="生成更新后的共享数据文件，替换 memories-data.js 并 push 到 GitHub" style="background:rgba(255,165,133,0.15);border-color:var(--coral);color:var(--coral);font-weight:700;">📡 发布到网站</button>
+    <button class="btn-admin" id="exportBtn" title="导出所有记忆为备份文件">📥 备份</button>
+    <button class="btn-admin" id="importBtn" title="从备份文件恢复记忆">📤 恢复</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
-    <button class="btn-admin" id="resetBtn" title="恢复默认示例数据">🔄 恢复默认</button>
+    <button class="btn-admin" id="resetBtn" title="清除本地修改，恢复共享默认">🔄 重置</button>
   </div>
+  <p style="font-size:0.7rem;color:var(--text-lighter);margin-top:8px;" id="dataHint">💡 <span id="localCount">0</span> 条本地记忆等待发布</p>
 </footer>
 
 <!-- ➕ Add Memory Button -->
@@ -1098,41 +1101,86 @@ body {
 
 <script>
 /* ============================================
-   🌟 DATA STORE
-   ============================================ */
-const STORAGE_KEY = 'myLittleStar_memories_v2';
+   🌟 DATA STORE — 双数据源：共享 + 本地
+   ============================================
+   共享记忆 (SHARED_MEMORIES)：来自 memories-data.js，所有人可见
+   本地记忆 (localStorage)：你自己添加的，只有你的浏览器可见
+   发布后本地记忆会合并到共享记忆中，变成所有人可见
+*/
+const STORAGE_KEY = 'myLittleStar_local_v3';
 
-function getDefaultMemories() {
-  return [
-    { id:'m1', type:'milestone', title:'第一次睁开眼睛', date:'2023-03-15', desc:'宝宝来到这个世界的第一天，整个世界都因为他而变得更加明亮。小小的手指紧紧握住我的手，那一刻我感受到了前所未有的幸福与责任。' },
-    { id:'m2', type:'photo', title:'第一个微笑', date:'2023-05-20', desc:'你对着妈妈露出了第一个甜甜的微笑，像春日里的第一缕阳光，融化了一切的疲惫。', fileData:null },
-    { id:'m3', type:'story', title:'第一次翻身', date:'2023-08-10', desc:'今天宝宝第一次成功翻身啦！他像一只努力的小乌龟，手脚并用地蹬了好几次，终于从仰卧变成了俯卧。成功后他抬起头，眼睛亮晶晶的，仿佛在说"看，我做到了！"全家人都为他鼓掌欢呼。' },
-    { id:'m4', type:'milestone', title:'第一次叫"妈妈"', date:'2024-01-08', desc:'那是一个普通的早晨，宝宝突然清晰地喊出了"妈妈"。那一刻，眼泪忍不住流了下来。这是世界上最动听的声音。' },
-    { id:'m5', type:'photo', title:'周岁生日派对', date:'2024-03-15', desc:'一岁啦！蛋糕、气球、还有好多爱他的人围在一起。宝宝用小手抓了一把奶油，涂得满脸都是，逗得所有人哈哈大笑。', fileData:null },
-    { id:'m6', type:'story', title:'学会走路的那天', date:'2024-07-22', desc:'摇摇晃晃地，你迈出了人生的第一步。张开双臂，像一只学飞的小鸟，扑进了妈妈的怀抱。爸爸在旁边激动得差点忘了按下录像键。从今天起，世界是你的舞台。' },
-    { id:'m7', type:'video', title:'第一次去动物园', date:'2024-10-05', desc:'看到大象时，你的眼睛瞪得圆圆的，嘴巴张成了O型。长颈鹿低头看你的时候，你又兴奋又有点害怕，紧紧抱住了爸爸的脖子。', fileData:null },
-    { id:'m8', type:'milestone', title:'两岁生日快乐', date:'2025-03-15', desc:'两岁的你已经会唱生日歌了，虽然调子跑到了天上，但那是世界上最动听的旋律。你吹蜡烛时，口水喷得到处都是，可爱极了！' },
-    { id:'m9', type:'story', title:'第一次自己吃饭', date:'2025-06-18', desc:'今天给了宝宝一把小勺子，他认真地舀起一勺米饭，颤颤巍巍地送到嘴边——虽然一半洒在了围兜上，但成功的喜悦写在脸上。他说"寄几吃！"（自己吃），骄傲得像个大孩子。' },
-    { id:'m10', type:'photo', title:'夏天的泡泡时光', date:'2025-08-30', desc:'阳光下的泡泡五彩斑斓，你追着泡泡跑来跑去，笑声像银铃一样清脆。这一刻，我看到了世界上最纯粹的快乐。', fileData:null },
-  ];
-}
-
+// 加载共享记忆（来自 memories-data.js）+ 本地记忆（来自 localStorage）
 function loadMemories() {
+  const shared = (typeof SHARED_MEMORIES !== 'undefined' && Array.isArray(SHARED_MEMORIES))
+    ? SHARED_MEMORIES
+    : [];
+
+  let local = [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) local = parsed;
     }
   } catch(e) {}
-  return getDefaultMemories();
+
+  // 合并：本地数据优先（相同ID用本地的），新ID直接加入
+  const merged = [...shared];
+  local.forEach(localMem => {
+    const idx = merged.findIndex(m => m.id === localMem.id);
+    if (idx >= 0) {
+      merged[idx] = localMem; // 本地版本覆盖共享版本
+    } else {
+      merged.unshift(localMem); // 新记忆插入最前面
+    }
+  });
+
+  return merged;
 }
 
-function saveMemories(memories) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(memories));
+// 保存到本地（只保存用户添加/修改的记忆，不重复保存共享的）
+function saveLocal(localMemories) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(localMemories));
+}
+
+// 获取纯本地记忆（用户自己添加或修改的）
+function getLocalOnly() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+// 判断某条记忆是共享的还是本地的
+function isLocalMemory(id) {
+  return getLocalOnly().some(m => m.id === id);
+}
+
+// 获取共享记忆的 ID 列表
+function getSharedIds() {
+  if (typeof SHARED_MEMORIES === 'undefined' || !Array.isArray(SHARED_MEMORIES)) return [];
+  return SHARED_MEMORIES.map(m => m.id);
 }
 
 let memories = loadMemories();
+
+function saveMemoriesToLocal() {
+  // 只保存用户自己添加的（不在共享记忆中的，或者修改过的共享记忆）
+  const sharedIds = getSharedIds();
+  const localOnly = memories.filter(m => {
+    // 如果 ID 以 'u' 开头，是用户创建的 → 保存
+    if (m.id.startsWith('u')) return true;
+    // 如果 ID 在共享中，但内容被修改了 → 保存修改版
+    if (sharedIds.includes(m.id)) {
+      const shared = SHARED_MEMORIES.find(s => s.id === m.id);
+      if (shared && JSON.stringify(shared) !== JSON.stringify(m)) return true;
+      return false;
+    }
+    // 其他情况
+    return false;
+  });
+  saveLocal(localOnly);
+}
 
 /* ============================================
    🎨 RENDER FUNCTIONS
@@ -1259,8 +1307,9 @@ function attachDeleteHandlers() {
       e.stopPropagation();
       if (confirm('确定要删除这条记忆吗？这个操作不能撤销哦～ 🥺')) {
         memories = memories.filter(m => m.id !== btn.dataset.id);
-        saveMemories(memories);
+        saveMemoriesToLocal();
         renderAll();
+        updateLocalCount();
         spawnSparkles(btn);
       }
     });
@@ -1404,8 +1453,9 @@ memoryForm.addEventListener('submit', function(e) {
     type, title, date, desc, fileData,
   };
   memories.unshift(newMemory);
-  saveMemories(memories);
+  saveMemoriesToLocal();
   renderAll();
+  updateLocalCount();
   closeModalFn();
   spawnSparkles(document.getElementById('addMemoryBtn'));
 
@@ -1415,32 +1465,55 @@ memoryForm.addEventListener('submit', function(e) {
 });
 
 /* ============================================
-   📥📤 EXPORT / IMPORT / RESET
+   📡 发布 / 导出 / 导入 / 重置
    ============================================ */
-document.getElementById('exportBtn').addEventListener('click', () => {
-  // Create export data (exclude large fileData for easier sharing, but include flag)
-  const exportData = memories.map(m => ({
-    ...m,
-    fileData: m.fileData ? '[BASE64_IMAGE_DATA]' : null,
-    // Actually keep fileData if present — the parent might want full backup
-    // For sharing with others, they can manually remove large entries
-  }));
 
-  // Also offer a "full backup" with all data
-  const fullExport = JSON.stringify(memories, null, 2);
-  const liteExport = JSON.stringify(memories.map(m => ({...m, fileData: m.fileData ? '(图片数据已保留在浏览器中)' : null})), null, 2);
+// 📡 核心功能：发布到网站
+document.getElementById('publishBtn').addEventListener('click', () => {
+  const allMemories = loadMemories();
+  const totalSize = new Blob([JSON.stringify(allMemories)]).size;
+  const sizeMB = (totalSize / 1024 / 1024).toFixed(2);
 
-  const blob = new Blob([fullExport], {type:'application/json'});
+  let warning = '';
+  if (parseFloat(sizeMB) > 5) {
+    warning = '\n\n⚠️ 数据文件约 ' + sizeMB + ' MB，包含照片/视频时会比较大。';
+  }
+
+  if (!confirm('📡 发布 ' + allMemories.length + ' 条记忆到网站！\n\n📦 文件大小：约 ' + sizeMB + ' MB' + warning + '\n\n发布后会下载一个新文件，你需要：\n1. 替换 docs/memories-data.js\n2. 提交并推送到 GitHub\n\n确定生成发布文件吗？')) {
+    return;
+  }
+
+  const jsContent = '/**\n * 🌟 共享记忆数据 — 更新于 ' + new Date().toLocaleString('zh-CN') + '\n * 共 ' + allMemories.length + ' 条记忆\n */\nconst SHARED_MEMORIES = ' + JSON.stringify(allMemories, null, 2) + ';\n';
+
+  const blob = new Blob([jsContent], {type:'application/javascript'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `小星星记忆备份_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = 'memories-data.js';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  spawnSparkles(document.getElementById('publishBtn'));
+
+  setTimeout(() => {
+    alert('✅ 发布文件已生成！\n\n📋 接下来：\n\n1️⃣ 打开 GitHub 仓库的 docs/ 目录\n2️⃣ 上传刚下载的 memories-data.js 替换旧文件\n3️⃣ 提交并推送\n\n🌐 推送后约30秒，所有人都能看到新内容！');
+  }, 500);
+});
+
+// 📥 完整备份
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const allMemories = loadMemories();
+  const blob = new Blob([JSON.stringify(allMemories, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '小星星完整备份_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
   URL.revokeObjectURL(url);
   spawnSparkles(document.getElementById('exportBtn'));
-  alert('✅ 记忆数据已导出！\n\n💡 提示：你可以把这个文件分享给家人，他们点击"导入数据"就能看到所有记忆了。');
 });
 
+// 📤 从备份恢复
 document.getElementById('importBtn').addEventListener('click', () => {
   document.getElementById('importFile').click();
 });
@@ -1453,30 +1526,52 @@ document.getElementById('importFile').addEventListener('change', function(e) {
     try {
       const data = JSON.parse(ev.target.result);
       if (!Array.isArray(data)) throw new Error('格式不正确');
-      if (confirm(`即将导入 ${data.length} 条记忆数据。\n当前数据将被替换，确定继续吗？`)) {
-        memories = data;
-        saveMemories(memories);
+      const sharedIds = getSharedIds();
+      const localData = data.filter(m => m.id.startsWith('u') || !sharedIds.includes(m.id));
+      if (confirm('即将恢复 ' + localData.length + ' 条本地记忆。\n当前本地数据将被替换，确定继续吗？')) {
+        saveLocal(localData);
+        memories = loadMemories();
         renderAll();
+        updateLocalCount();
         spawnSparkles(document.getElementById('importBtn'));
-        alert('✅ 导入成功！刷新页面即可看到所有记忆。');
       }
     } catch(err) {
-      alert('❌ 文件格式不正确，请选择之前导出的 .json 文件。');
+      alert('❌ 文件格式不正确，请选择之前导出的 .json 备份文件。');
     }
   };
   reader.readAsText(file);
   this.value = '';
 });
 
+// 🔄 重置本地数据
 document.getElementById('resetBtn').addEventListener('click', () => {
-  if (confirm('确定要恢复默认示例数据吗？\n你添加的所有记忆将会丢失！')) {
+  if (confirm('确定要清除所有本地修改吗？\n\n这将删除你添加的所有记忆和修改。\n共享记忆不会受影响。')) {
     localStorage.removeItem(STORAGE_KEY);
-    memories = getDefaultMemories();
+    memories = loadMemories();
     renderAll();
+    updateLocalCount();
     spawnSparkles(document.getElementById('resetBtn'));
-    alert('🔄 已恢复默认示例数据。');
+    alert('🔄 已清除本地数据。共享记忆保持不变。');
   }
 });
+
+// 更新本地记忆计数
+function updateLocalCount() {
+  const local = getLocalOnly();
+  const el = document.getElementById('localCount');
+  if (el) el.textContent = local.length;
+  const hint = document.getElementById('dataHint');
+  if (!hint) return;
+  if (local.length > 0) {
+    hint.style.color = 'var(--coral)';
+    hint.innerHTML = '💡 <span id="localCount">' + local.length + '</span> 条本地记忆等待<a href="javascript:void(0)" onclick="document.getElementById(\'publishBtn\').click()" style="color:var(--coral);text-decoration:underline;">📡 发布</a>';
+  } else {
+    hint.style.color = 'var(--text-lighter)';
+    hint.innerHTML = '💡 <span id="localCount">0</span> 条本地记忆，所有内容已同步';
+  }
+}
+
+setTimeout(updateLocalCount, 500);
 
 /* ============================================
    🎨 MAGIC PARTICLE CANVAS
