@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小小星球 | 他的童年故事</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="sky-bg"></div>
+  <header class="hero">
+    <div class="hero-content">
+      <h1>小小星球</h1>
+      <p>这是一个专属于他的小世界，珍藏照片、视频和每一个温暖故事。</p>
+      <a class="btn" href="#stories">开始探索</a>
+    </div>
+  </header>
+
+  <main>
+    <section id="gallery" class="section section-gallery">
+      <div class="section-header">
+        <span>01</span>
+        <h2>照片与视频</h2>
+      </div>
+      <p>把点点滴滴收藏成星星，和他一起回到那些快乐瞬间。</p>
+      <div class="cards">
+        <article class="card">
+          <div class="media-placeholder">照片 1</div>
+          <h3>第一次爬楼梯</h3>
+          <p>笑容像太阳，勇敢迈出第一步。</p>
+        </article>
+        <article class="card">
+          <div class="media-placeholder">照片 2</div>
+          <h3>公园里的奔跑</h3>
+          <p>风是他的朋友，草地是他的舞台。</p>
+        </article>
+        <article class="card">
+          <div class="media-placeholder">视频</div>
+          <h3>唱歌的小讲述者</h3>
+          <p>每一句童谣都让世界变得更甜。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="stories" class="section section-stories">
+      <div class="section-header">
+        <span>02</span>
+        <h2>故事角落</h2>
+      </div>
+      <p>这里有他的小秘密、温柔瞬间和爸妈珍藏的每一个童话。</p>
+      <div class="story-list">
+        <article class="story-card">
+          <h3>那一次，小手抓住了彩虹</h3>
+          <p>在雨后小巷，他指着天边的彩虹，认真地说：“妈妈，那里有我的朋友。”</p>
+        </article>
+        <article class="story-card">
+          <h3>晚安故事星球</h3>
+          <p>每天睡前，他会把今天的冒险变成一个小故事，悄悄收藏到梦里。</p>
+        </article>
+      </div>
+      <button id="newStoryBtn" class="btn-secondary">写下新的故事</button>
+    </section>
+
+    <section class="section section-magic">
+      <div class="section-header">
+        <span>03</span>
+        <h2>梦想与想象</h2>
+      </div>
+      <p>未来的他可能是星球探险家、动物朋友、或者会飞的画家。</p>
+      <div class="magic-grid">
+        <div class="magic-card">星球探险</div>
+        <div class="magic-card">泡泡城堡</div>
+        <div class="magic-card">云朵列车</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>一段属于他的童年旅程，慢慢记录，慢慢珍藏。</p>
+  </footer>
+
+  <div id="storyModal" class="modal hidden">
+    <div class="modal-content">
+      <button class="modal-close" id="closeModal">×</button>
+      <h3>写下新的故事</h3>
+      <textarea id="storyInput" placeholder="记录今天的一个瞬间..."></textarea>
+      <button id="saveStory" class="btn">保存故事</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
